@@ -47,7 +47,7 @@ export default function Board(props: BoardProps) {
         );
 
         // Update the moves list with a moved stone
-        const moveRepresentation = `${String.fromCharCode(65 + selectedStone.x)}${selectedStone.y + 1}->${String.fromCharCode(65 + x)}${y + 1}`;
+        const moveRepresentation = `${String.fromCharCode(65 + selectedStone.y)}${selectedStone.x + 1}->${String.fromCharCode(65 + y)}${x + 1}`;
         if (currentPlayer === "X") {
           // Update the current ploy with X's move
           const ploy = { index: currentPloy!.index, xMove: moveRepresentation, oMove: null };
@@ -80,7 +80,7 @@ export default function Board(props: BoardProps) {
           row.map((cell, j) => (i === x && j === y ? currentPlayer : cell))
         );
 
-        const moveRepresentation = `${String.fromCharCode(65 + x)}${y + 1}`;
+        const moveRepresentation = `${String.fromCharCode(65 + y)}${x + 1}`;
         if (currentPlayer === "X") {
           // Update the current ploy with X's move
           const ploy = { index: currentPloy!.index, xMove: moveRepresentation, oMove: null };
