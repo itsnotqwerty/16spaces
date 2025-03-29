@@ -17,7 +17,7 @@ type SidebarProps = {
 
 export default function Sidebar({ playerX, playerO, ploys }: SidebarProps) {
   return (
-    <div class="w-64 p-4 border-l bg-gray-100">
+    <div class="relative top-0 w-64 p-4 border-l bg-gray-100">
       {/* Player Information */}
       <div class="mb-6">
         <h2 class="text-lg font-bold mb-2">Players</h2>

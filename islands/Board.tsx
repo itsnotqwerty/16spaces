@@ -10,6 +10,7 @@ export default function Board() {
   const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
   const [selectedStone, setSelectedStone] = useState<{ x: number; y: number } | null>(null);
   const [winState, setWinState] = useState<string | null>(null);
+  const [winningLine, setWinningLine] = useState<number[][] | null>(null);
 
   const handleCellClick = (x: number, y: number) => {
     if (winState) return; // Ignore clicks if the game is over
@@ -35,6 +36,13 @@ export default function Board() {
         setBoard(newBoard);
         setSelectedStone(null);
         setWinState(checkWin(newBoard));
+        if (winState) {
+          // Highlight the winning line
+          const winningCells = newBoard.flatMap((row, i) =>
+            row.map((cell, j) => (cell === winState ? [i, j] : null)).filter(Boolean)
+          );
+          setWinningLine(winningCells as number[][]);
+        }
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
       }
     } else {
@@ -45,6 +53,13 @@ export default function Board() {
         );
         setBoard(newBoard);
         setWinState(checkWin(newBoard));
+        if (winState) {
+          // Highlight the winning line
+          const winningCells = newBoard.flatMap((row, i) =>
+            row.map((cell, j) => (cell === winState ? [i, j] : null)).filter(Boolean)
+          );
+          setWinningLine(winningCells as number[][]);
+        }
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
       } else if (board[x][y] === currentPlayer) {
         // Select an existing stone
@@ -106,16 +121,19 @@ export default function Board() {
                 y={y}
                 value={cell}
                 isSelected={selectedStone?.x === x && selectedStone?.y === y}
+                isWinning={winningLine?.some(([wx, wy]) => wx === x && wy === y) || false}
                 onClick={() => handleCellClick(x, y)}
               />
             ))}
           </div>
         ))}
       </div>
-      {winState && <p class="mt-4 text-xl">Player {winState} wins!</p>}
-      <button class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
-        Reset Game
-      </button>
+      <div class="flex flex-row justify-start items-center space-x-4">
+        {winState && <p class="mt-4 text-xl">Player {winState} wins!</p>}
+        <button class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
+          Reset Game
+        </button>
+      </div>
     </div>
   );
 }
