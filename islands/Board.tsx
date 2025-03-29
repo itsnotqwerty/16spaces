@@ -3,7 +3,18 @@ import Space from "../components/Space.tsx";
 
 type Player = "X" | "O" | null;
 
-export default function Board() {
+type Ploy = {
+  index: number; // e.g., 0, 1, 2, etc.
+  xMove: string | null; // e.g., "A1"
+  oMove: string | null; // e.g., "B2"
+};
+
+type BoardProps = {
+  moveHook: (index: number, xMove: string | null, oMove: string | null) => void;
+  resetHook: () => void;
+};
+
+export default function Board(props: BoardProps) {
   const [board, setBoard] = useState<Player[][]>(
     Array(4).fill(Array(4).fill(null))
   );
@@ -11,7 +22,8 @@ export default function Board() {
   const [selectedStone, setSelectedStone] = useState<{ x: number; y: number } | null>(null);
   const [winState, setWinState] = useState<string | null>(null);
   const [winningLine, setWinningLine] = useState<number[][] | null>(null);
-
+  const [currentPloy, setCurrentPloy] = useState<Ploy | null>({index: 0, xMove: null, oMove: null});
+  
   const handleCellClick = (x: number, y: number) => {
     if (winState) return; // Ignore clicks if the game is over
 
@@ -33,6 +45,22 @@ export default function Board() {
               : cell
           )
         );
+
+        // Update the moves list with a moved stone
+        const moveRepresentation = `${String.fromCharCode(65 + selectedStone.x)}${selectedStone.y + 1}->${String.fromCharCode(65 + x)}${y + 1}`;
+        if (currentPlayer === "X") {
+          // Update the current ploy with X's move
+          const ploy = { index: currentPloy!.index, xMove: moveRepresentation, oMove: null };
+          setCurrentPloy(ploy);
+          props.moveHook(currentPloy!.index, moveRepresentation, currentPloy!.oMove);
+        } else if (currentPlayer === "O") {
+          // Update the current ploy with O's move
+          const ploy: Ploy = { index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation };
+          setCurrentPloy(ploy);
+          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation);
+          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null });
+        }
+
         setBoard(newBoard);
         setSelectedStone(null);
         setWinState(checkWin(newBoard));
@@ -51,15 +79,25 @@ export default function Board() {
         const newBoard = board.map((row, i) =>
           row.map((cell, j) => (i === x && j === y ? currentPlayer : cell))
         );
+
+        const moveRepresentation = `${String.fromCharCode(65 + x)}${y + 1}`;
+        if (currentPlayer === "X") {
+          // Update the current ploy with X's move
+          const ploy = { index: currentPloy!.index, xMove: moveRepresentation, oMove: null };
+          setCurrentPloy(ploy);
+          props.moveHook(currentPloy!.index, moveRepresentation, currentPloy!.oMove);
+        } else if (currentPlayer === "O") {
+          // Update the current ploy with O's move
+          const ploy: Ploy = { index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation };
+          setCurrentPloy(ploy);
+          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation);
+
+          // Increment the index for the next ploy after completing the current one
+          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null });
+        }
+
         setBoard(newBoard);
         setWinState(checkWin(newBoard));
-        if (winState) {
-          // Highlight the winning line
-          const winningCells = newBoard.flatMap((row, i) =>
-            row.map((cell, j) => (cell === winState ? [i, j] : null)).filter(Boolean)
-          );
-          setWinningLine(winningCells as number[][]);
-        }
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
       } else if (board[x][y] === currentPlayer) {
         // Select an existing stone
@@ -96,6 +134,9 @@ export default function Board() {
     setCurrentPlayer("X"); // Reset to player X
     setSelectedStone(null); // Clear selected stone
     setWinState(null); // Clear win state
+    setCurrentPloy({index: 0, xMove: null, oMove: null}); // Reset current ploy
+    setWinningLine(null); // Clear winning line
+    props.resetHook(); // Call the reset hook
   };
 
   return (
