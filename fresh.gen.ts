@@ -6,6 +6,7 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $Board from "./islands/Board.tsx";
+import * as $GameManager from "./islands/GameManager.tsx";
 import * as $Sidebar from "./islands/Sidebar.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -17,6 +18,7 @@ const manifest = {
   },
   islands: {
     "./islands/Board.tsx": $Board,
+    "./islands/GameManager.tsx": $GameManager,
     "./islands/Sidebar.tsx": $Sidebar,
   },
   baseUrl: import.meta.url,

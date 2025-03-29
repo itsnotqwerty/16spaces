@@ -5,6 +5,7 @@ type PlayerInfo = {
 };
 
 type Ploy = {
+  index: number; // e.g., 0, 1, 2, etc.
   xMove: string | null; // e.g., "A1"
   oMove: string | null; // e.g., "B2"
 };
