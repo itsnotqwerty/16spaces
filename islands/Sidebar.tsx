@@ -68,7 +68,7 @@ export default function Sidebar({ playerX, playerO, ploys }: SidebarProps) {
               {ploys.map((ploy, index) => (
                 <Ploy
                   key={index}
-                  index={ploy.index}
+                  index={ploy.index + 1} // Display 1-based index
                   xMove={ploy.xMove}
                   oMove={ploy.oMove}
                 />
