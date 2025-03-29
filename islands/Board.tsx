@@ -11,6 +11,7 @@ type Ploy = {
 
 type BoardProps = {
   moveHook: (index: number, xMove: string | null, oMove: string | null) => void;
+  resetHook: () => void;
 };
 
 export default function Board(props: BoardProps) {
@@ -21,8 +22,8 @@ export default function Board(props: BoardProps) {
   const [selectedStone, setSelectedStone] = useState<{ x: number; y: number } | null>(null);
   const [winState, setWinState] = useState<string | null>(null);
   const [winningLine, setWinningLine] = useState<number[][] | null>(null);
-  const [currentPloy, setCurrentPloy] = useState<Ploy | null>({index: 1, xMove: null, oMove: null});
-
+  const [currentPloy, setCurrentPloy] = useState<Ploy | null>({index: 0, xMove: null, oMove: null});
+  
   const handleCellClick = (x: number, y: number) => {
     if (winState) return; // Ignore clicks if the game is over
 
@@ -133,8 +134,9 @@ export default function Board(props: BoardProps) {
     setCurrentPlayer("X"); // Reset to player X
     setSelectedStone(null); // Clear selected stone
     setWinState(null); // Clear win state
-    setCurrentPloy({index: 1, xMove: null, oMove: null}); // Reset current ploy
+    setCurrentPloy({index: 0, xMove: null, oMove: null}); // Reset current ploy
     setWinningLine(null); // Clear winning line
+    props.resetHook(); // Call the reset hook
   };
 
   return (

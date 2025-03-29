@@ -45,9 +45,13 @@ export default function GameManager() {
     });
   };
 
+  const handleReset = () => {
+    setPloys([]);
+  }
+
   return (
     <div class="flex flex-row items-start space-x-4">
-      <Board moveHook={handleMove}/>
+      <Board moveHook={handleMove} resetHook={handleReset}/>
       <Sidebar playerX={playerX} playerO={playerO} ploys={ploys} />
     </div>
   );
