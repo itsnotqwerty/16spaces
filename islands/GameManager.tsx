@@ -106,7 +106,7 @@ export default function GameManager() {
   };
 
   return (
-    <div class="flex flex-col sm:flex-row items-start space-x-4">
+    <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4">
       <Board
         moveHook={handleMove}
         resetHook={handleReset}

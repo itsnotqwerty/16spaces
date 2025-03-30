@@ -39,7 +39,7 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
   }, [ploys]);
 
   return (
-    <div class="w-48 p-2 my-2 border-l bg-gray-200 rounded-lg text-sm">
+    <div class="w-full sm:w-48 p-2 my-2 border-l bg-gray-200 rounded-lg text-sm">
       {/* Player Information */}
       <div>
         <h2 class="font-bold text-2xl mb-2">Players</h2>

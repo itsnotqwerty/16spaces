@@ -140,7 +140,7 @@ export default function Board(props: BoardProps) {
   };
 
   return (
-    <div class="m-2">
+    <div class="my-2 ml-0 mr-4">
       {/* Top labels */}
       <div class="grid grid-cols-5 gap-1 mb-2">
         <div></div> {/* Empty corner */}
