@@ -26,10 +26,11 @@ export default function GameManager() {
     isConnected: false,
   });
   const [ploys, setPloys] = useState<Ploy[]>([]);
-  const [timeX, setTimeX] = useState(150); // 2:30 in seconds
-  const [timeO, setTimeO] = useState(150); // 2:30 in seconds
-  const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
+  const [maxTime, setMaxTime] = useState(150); // Set initial max time
+  const [timeX, setTimeX] = useState(maxTime);
+  const [timeO, setTimeO] = useState(maxTime);
   const [timerActive, setTimerActive] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
   const [winState, setWinState] = useState<"X" | "O" | null>(null); // Track the winner
 
   useEffect(() => {
@@ -97,8 +98,8 @@ export default function GameManager() {
 
   const handleReset = () => {
     setPloys([]);
-    setTimeX(150); // Reset to 2:30
-    setTimeO(150); // Reset to 2:30
+    setTimeX(maxTime); // Reset to 2:30
+    setTimeO(maxTime); // Reset to 2:30
     setCurrentPlayer("X");
     setTimerActive(false);
     setWinState(null); // Clear the winner

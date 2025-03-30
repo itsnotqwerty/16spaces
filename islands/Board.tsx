@@ -64,13 +64,10 @@ export default function Board(props: BoardProps) {
         setBoard(newBoard);
         setSelectedStone(null);
 
-        const winner = checkWin(newBoard);
-        if (winner) {
-          props.winHook(winner); // Notify GameManager of the winner
-          const winningCells = newBoard.flatMap((row, i) =>
-            row.map((cell, j) => (cell === winner ? [i, j] : null)).filter(Boolean)
-          );
-          setWinningLine(winningCells as number[][]);
+        const winResult = checkWin(newBoard);
+        if (winResult) {
+          props.winHook(winResult.winner); // Notify GameManager of the winner
+          setWinningLine(winResult.line);
         }
 
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
@@ -94,13 +91,10 @@ export default function Board(props: BoardProps) {
 
         setBoard(newBoard);
 
-        const winner = checkWin(newBoard);
-        if (winner) {
-          props.winHook(winner); // Notify GameManager of the winner
-          const winningCells = newBoard.flatMap((row, i) =>
-            row.map((cell, j) => (cell === winner ? [i, j] : null)).filter(Boolean)
-          );
-          setWinningLine(winningCells as number[][]);
+        const winResult = checkWin(newBoard);
+        if (winResult) {
+          props.winHook(winResult.winner); // Notify GameManager of the winner
+          setWinningLine(winResult.line);
         }
 
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
@@ -119,15 +113,20 @@ export default function Board(props: BoardProps) {
   const countStones = (player: Player) =>
     board.flat().filter((cell) => cell === player).length;
 
-  const checkWin = (boardPos: Player[][]): "X" | "O" | null => {
+  const checkWin = (boardPos: Player[][]): { winner: "X" | "O"; line: number[][] } | null => {
     const lines = [
-      ...boardPos, // Rows
-      ...boardPos[0].map((_, col) => boardPos.map((row) => row[col])), // Columns
-      boardPos.map((_, i) => boardPos[i][i]), // Main diagonal
-      boardPos.map((_, i) => boardPos[i][3 - i]), // Anti-diagonal
+      ...boardPos.map((row, i) => row.map((_, j) => [i, j])), // Rows
+      ...boardPos[0].map((_, col) => boardPos.map((_, row) => [row, col])), // Columns
+      boardPos.map((_, i) => [i, i]), // Main diagonal
+      boardPos.map((_, i) => [i, boardPos.length - 1 - i]), // Anti-diagonal
     ];
-    if (lines.some((line) => line.every((cell) => cell === "X"))) return "X";
-    if (lines.some((line) => line.every((cell) => cell === "O"))) return "O";
+
+    for (const line of lines) {
+      const cells = line.map(([x, y]) => boardPos[x][y]);
+      if (cells.every((cell) => cell === "X")) return { winner: "X", line };
+      if (cells.every((cell) => cell === "O")) return { winner: "O", line };
+    }
+
     return null;
   };
 
@@ -146,7 +145,7 @@ export default function Board(props: BoardProps) {
       <div class="grid grid-cols-5 gap-1 mb-2">
         <div></div> {/* Empty corner */}
         {["A", "B", "C", "D"].map((label) => (
-          <div key={label} class="text-center font-bold">
+          <div key={label} class="text-center text-white font-bold">
             {label}
           </div>
         ))}
@@ -155,7 +154,7 @@ export default function Board(props: BoardProps) {
       <div class="grid grid-rows-4 gap-1">
         {board.map((row, x) => (
           <div key={x} class="grid grid-cols-5 gap-1">
-            <div class="flex items-center justify-center font-bold">{x + 1}</div> {/* Side label */}
+            <div class="flex items-center justify-center text-white font-bold">{x + 1}</div> {/* Side label */}
             {row.map((cell, y) => (
               <Space
                 key={`${x}-${y}`}
@@ -171,7 +170,6 @@ export default function Board(props: BoardProps) {
         ))}
       </div>
       <div class="flex flex-row justify-start items-center space-x-4">
-        {props.winState && <p class="mt-4 text-xl">Player {props.winState} wins!</p>}
         <button class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
           Reset Game
         </button>

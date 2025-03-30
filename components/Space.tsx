@@ -9,16 +9,16 @@ type SpaceProps = {
 
 export default function Space({ x, y, value, isSelected, isWinning, onClick }: SpaceProps) {
   const _pos = [x, y];
+  const isDark = (x + y) % 2 === 0;
 
   return (
     <div
       class={`w-16 h-16 flex items-center justify-center border
-        ${isSelected ? "bg-yellow-300" : "bg-white"}
-        ${isWinning ? "bg-green-300": "bg-white"}
+        ${isWinning ? "bg-green-300" : isSelected ? "bg-yellow-300" : isDark ? "bg-gray-500" : "bg-gray-200"}
       `}
       onClick={onClick}
     >
-      {value}
+      <h2 class="font-bold">{value}</h2>
     </div>
   );
 }

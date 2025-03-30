@@ -39,7 +39,7 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
   }, [ploys]);
 
   return (
-    <div class="w-48 p-2 border-l bg-gray-50 text-sm">
+    <div class="w-48 p-2 border-l bg-gray-200 text-sm">
       {/* Player Information */}
       <div class="mb-4">
         <h2 class="font-bold mb-2">Players</h2>
@@ -51,11 +51,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
           ></span>
           <span class="font-bold">X:</span> {playerX.name} ({playerX.elo})
             <div
-            class={`text-xs ${
-              timeX < 20 ? "text-red-600" : "text-gray-600"
+            class={`text-sm font-bold ${
+              timeX < 30 ? "text-red-600" : "text-gray-600"
             }`}
             >
-            Time: {formatTime(timeX)}
+            {formatTime(timeX)}
             </div>
         </div>
         <div>
@@ -66,11 +66,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
           ></span>
           <span class="font-bold">O:</span> {playerO.name} ({playerO.elo})
           <div
-          class={`text-xs ${
-            timeO < 20 ? "text-red-600" : "text-gray-600"
+          class={`text-sm font-bold ${
+            timeO < 30 ? "text-red-600" : "text-gray-600"
           }`}
           >
-          Time: {formatTime(timeO)}
+          {formatTime(timeO)}
           </div>
         </div>
       </div>
