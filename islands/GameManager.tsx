@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 import Board from "./Board.tsx";
 import Sidebar from "./Sidebar.tsx";
 
@@ -26,8 +26,45 @@ export default function GameManager() {
     isConnected: false,
   });
   const [ploys, setPloys] = useState<Ploy[]>([]);
+  const [timeX, setTimeX] = useState(150); // 2:30 in seconds
+  const [timeO, setTimeO] = useState(150); // 2:30 in seconds
+  const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
+  const [timerActive, setTimerActive] = useState(false);
+  const [winState, setWinState] = useState<"X" | "O" | null>(null); // Track the winner
+
+  useEffect(() => {
+    let timer: number | undefined;
+
+    if (timerActive && !winState) {
+      timer = setInterval(() => {
+        if (currentPlayer === "X") {
+          setTimeX((prev) => {
+            if (prev <= 1) {
+              setWinState("O"); // Player O wins
+              setTimerActive(false); // Stop the timer
+              return 0;
+            }
+            return prev - 1;
+          });
+        } else {
+          setTimeO((prev) => {
+            if (prev <= 1) {
+              setWinState("X"); // Player X wins
+              setTimerActive(false); // Stop the timer
+              return 0;
+            }
+            return prev - 1;
+          });
+        }
+      }, 1000);
+    }
+
+    return () => clearInterval(timer);
+  }, [timerActive, currentPlayer, winState]);
 
   const handleMove = (index: number, xMove: string | null, oMove: string | null) => {
+    if (winState) return; // Prevent moves if the game is over
+
     setPloys((prevPloys) => {
       const newPloys = [...prevPloys];
       if (newPloys.length > index) {
@@ -39,20 +76,50 @@ export default function GameManager() {
           return ploy;
         });
       } else {
-        newPloys.push({index, xMove, oMove });
+        newPloys.push({ index, xMove, oMove });
       }
       return newPloys;
     });
+
+    // Start the timer after the first move
+    if (!timerActive) {
+      setTimerActive(true);
+    }
+
+    // Switch the current player
+    setCurrentPlayer((prev) => (prev === "X" ? "O" : "X"));
+  };
+
+  const handleWin = (winner: "X" | "O") => {
+    setWinState(winner);
+    setTimerActive(false); // Stop the timer
   };
 
   const handleReset = () => {
     setPloys([]);
-  }
+    setTimeX(150); // Reset to 2:30
+    setTimeO(150); // Reset to 2:30
+    setCurrentPlayer("X");
+    setTimerActive(false);
+    setWinState(null); // Clear the winner
+  };
 
   return (
     <div class="flex flex-row items-start space-x-4">
-      <Board moveHook={handleMove} resetHook={handleReset}/>
-      <Sidebar playerX={playerX} playerO={playerO} ploys={ploys} />
+      <Board
+        moveHook={handleMove}
+        resetHook={handleReset}
+        winHook={handleWin}
+        winState={winState}
+      />
+      <Sidebar
+        playerX={playerX}
+        playerO={playerO}
+        ploys={ploys}
+        timeX={timeX}
+        timeO={timeO}
+        winState={winState}
+      />
     </div>
   );
 }

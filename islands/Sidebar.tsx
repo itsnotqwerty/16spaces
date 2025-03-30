@@ -17,9 +17,18 @@ type SidebarProps = {
   playerX: PlayerInfo;
   playerO: PlayerInfo;
   ploys: IPloy[];
+  timeX: number; // Remaining time for player X in seconds
+  timeO: number; // Remaining time for player O in seconds
+  winState: "X" | "O" | null; // The winner of the game
 };
 
-export default function Sidebar({ playerX, playerO, ploys }: SidebarProps) {
+function formatTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes}:${secs.toString().padStart(2, "0")}`;
+}
+
+export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winState }: SidebarProps) {
   const movesContainerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to the bottom whenever ploys are updated
@@ -41,6 +50,13 @@ export default function Sidebar({ playerX, playerO, ploys }: SidebarProps) {
             }`}
           ></span>
           <span class="font-bold">X:</span> {playerX.name} ({playerX.elo})
+            <div
+            class={`text-xs ${
+              timeX < 20 ? "text-red-600" : "text-gray-600"
+            }`}
+            >
+            Time: {formatTime(timeX)}
+            </div>
         </div>
         <div>
           <span
@@ -49,13 +65,27 @@ export default function Sidebar({ playerX, playerO, ploys }: SidebarProps) {
             }`}
           ></span>
           <span class="font-bold">O:</span> {playerO.name} ({playerO.elo})
+          <div
+          class={`text-xs ${
+            timeO < 20 ? "text-red-600" : "text-gray-600"
+          }`}
+          >
+          Time: {formatTime(timeO)}
+          </div>
         </div>
       </div>
+
+      {/* Winner Announcement */}
+      {winState && (
+        <div class="mt-4 p-2 bg-green-100 text-green-800 text-center rounded">
+          Player {winState} wins!
+        </div>
+      )}
 
       {/* Ploys */}
       <div>
         <h2 class="font-bold mb-2">Moves</h2>
-        <div class="max-h-48 overflow-y-auto">
+        <div ref={movesContainerRef} class="max-h-48 overflow-y-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b">

@@ -12,6 +12,8 @@ type Ploy = {
 type BoardProps = {
   moveHook: (index: number, xMove: string | null, oMove: string | null) => void;
   resetHook: () => void;
+  winHook: (winner: "X" | "O") => void;
+  winState: "X" | "O" | null;
 };
 
 export default function Board(props: BoardProps) {
@@ -20,12 +22,15 @@ export default function Board(props: BoardProps) {
   );
   const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
   const [selectedStone, setSelectedStone] = useState<{ x: number; y: number } | null>(null);
-  const [winState, setWinState] = useState<string | null>(null);
   const [winningLine, setWinningLine] = useState<number[][] | null>(null);
-  const [currentPloy, setCurrentPloy] = useState<Ploy | null>({index: 0, xMove: null, oMove: null});
-  
+  const [currentPloy, setCurrentPloy] = useState<Ploy | null>({
+    index: 0,
+    xMove: null,
+    oMove: null,
+  });
+
   const handleCellClick = (x: number, y: number) => {
-    if (winState) return; // Ignore clicks if the game is over
+    if (props.winState) return; // Ignore clicks if the game is over
 
     if (selectedStone) {
       // Deselect the currently selected stone if clicked again
@@ -46,31 +51,28 @@ export default function Board(props: BoardProps) {
           )
         );
 
-        // Update the moves list with a moved stone
         const moveRepresentation = `${String.fromCharCode(65 + selectedStone.y)}${selectedStone.x + 1}->${String.fromCharCode(65 + y)}${x + 1}`;
         if (currentPlayer === "X") {
-          // Update the current ploy with X's move
-          const ploy = { index: currentPloy!.index, xMove: moveRepresentation, oMove: null };
-          setCurrentPloy(ploy);
-          props.moveHook(currentPloy!.index, moveRepresentation, currentPloy!.oMove);
+          setCurrentPloy({index: currentPloy!.index, xMove: moveRepresentation, oMove: null});
+          props.moveHook(currentPloy!.index, moveRepresentation, null); // Notify GameManager of the move
         } else if (currentPlayer === "O") {
-          // Update the current ploy with O's move
-          const ploy: Ploy = { index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation };
-          setCurrentPloy(ploy);
-          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation);
-          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null });
+          setCurrentPloy({ index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation });
+          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation); // Notify GameManager of the move
+          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null }); // Increment the index for the next move
         }
 
         setBoard(newBoard);
         setSelectedStone(null);
-        setWinState(checkWin(newBoard));
-        if (winState) {
-          // Highlight the winning line
+
+        const winner = checkWin(newBoard);
+        if (winner) {
+          props.winHook(winner); // Notify GameManager of the winner
           const winningCells = newBoard.flatMap((row, i) =>
-            row.map((cell, j) => (cell === winState ? [i, j] : null)).filter(Boolean)
+            row.map((cell, j) => (cell === winner ? [i, j] : null)).filter(Boolean)
           );
           setWinningLine(winningCells as number[][]);
         }
+
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
       }
     } else {
@@ -82,25 +84,27 @@ export default function Board(props: BoardProps) {
 
         const moveRepresentation = `${String.fromCharCode(65 + y)}${x + 1}`;
         if (currentPlayer === "X") {
-          // Update the current ploy with X's move
-          const ploy = { index: currentPloy!.index, xMove: moveRepresentation, oMove: null };
-          setCurrentPloy(ploy);
-          props.moveHook(currentPloy!.index, moveRepresentation, currentPloy!.oMove);
+          setCurrentPloy({index: currentPloy!.index, xMove: moveRepresentation, oMove: null});
+          props.moveHook(currentPloy!.index, moveRepresentation, null); // Notify GameManager of the move
         } else if (currentPlayer === "O") {
-          // Update the current ploy with O's move
-          const ploy: Ploy = { index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation };
-          setCurrentPloy(ploy);
-          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation);
-
-          // Increment the index for the next ploy after completing the current one
-          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null });
+          setCurrentPloy({ index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation });
+          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation); // Notify GameManager of the move
+          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null }); // Increment the index for the next move
         }
 
         setBoard(newBoard);
-        setWinState(checkWin(newBoard));
+
+        const winner = checkWin(newBoard);
+        if (winner) {
+          props.winHook(winner); // Notify GameManager of the winner
+          const winningCells = newBoard.flatMap((row, i) =>
+            row.map((cell, j) => (cell === winner ? [i, j] : null)).filter(Boolean)
+          );
+          setWinningLine(winningCells as number[][]);
+        }
+
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
       } else if (board[x][y] === currentPlayer) {
-        // Select an existing stone
         setSelectedStone({ x, y });
       }
     }
@@ -115,17 +119,15 @@ export default function Board(props: BoardProps) {
   const countStones = (player: Player) =>
     board.flat().filter((cell) => cell === player).length;
 
-  const checkWin = (boardPos: Player[][]) => {
-    // Check rows, columns, and diagonals for a win
+  const checkWin = (boardPos: Player[][]): "X" | "O" | null => {
     const lines = [
       ...boardPos, // Rows
       ...boardPos[0].map((_, col) => boardPos.map((row) => row[col])), // Columns
       boardPos.map((_, i) => boardPos[i][i]), // Main diagonal
       boardPos.map((_, i) => boardPos[i][3 - i]), // Anti-diagonal
     ];
-    if (lines.some((line) => line.every((cell) => cell === currentPlayer))) {
-      return currentPlayer;
-    }
+    if (lines.some((line) => line.every((cell) => cell === "X"))) return "X";
+    if (lines.some((line) => line.every((cell) => cell === "O"))) return "O";
     return null;
   };
 
@@ -133,8 +135,6 @@ export default function Board(props: BoardProps) {
     setBoard(Array(4).fill(Array(4).fill(null))); // Clear the board
     setCurrentPlayer("X"); // Reset to player X
     setSelectedStone(null); // Clear selected stone
-    setWinState(null); // Clear win state
-    setCurrentPloy({index: 0, xMove: null, oMove: null}); // Reset current ploy
     setWinningLine(null); // Clear winning line
     props.resetHook(); // Call the reset hook
   };
@@ -170,7 +170,7 @@ export default function Board(props: BoardProps) {
         ))}
       </div>
       <div class="flex flex-row justify-start items-center space-x-4">
-        {winState && <p class="mt-4 text-xl">Player {winState} wins!</p>}
+        {props.winState && <p class="mt-4 text-xl">Player {props.winState} wins!</p>}
         <button class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
           Reset Game
         </button>
