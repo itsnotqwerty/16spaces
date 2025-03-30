@@ -136,6 +136,7 @@ export default function Board(props: BoardProps) {
     setCurrentPlayer("X"); // Reset to player X
     setSelectedStone(null); // Clear selected stone
     setWinningLine(null); // Clear winning line
+    setCurrentPloy({ index: 0, xMove: null, oMove: null }); // Reset ploy
     props.resetHook(); // Call the reset hook
   };
 
