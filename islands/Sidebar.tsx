@@ -39,38 +39,42 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
   }, [ploys]);
 
   return (
-    <div class="w-48 p-2 border-l bg-gray-200 text-sm">
+    <div class="w-48 p-2 my-2 border-l bg-gray-200 rounded-lg text-sm">
       {/* Player Information */}
-      <div class="mb-4">
-        <h2 class="font-bold mb-2">Players</h2>
-        <div class="mb-2">
-          <span
-            class={`inline-block w-2 h-2 rounded-full mr-1 ${
-              playerX.isConnected ? "bg-green-500" : "bg-gray-400"
-            }`}
-          ></span>
-          <span class="font-bold">X:</span> {playerX.name} ({playerX.elo})
-            <div
-            class={`text-sm font-bold ${
-              timeX < 30 ? "text-red-600" : "text-gray-600"
-            }`}
-            >
-            {formatTime(timeX)}
+      <div>
+        <h2 class="font-bold text-2xl mb-2">Players</h2>
+        <div class="flex flex-col mb-2">
+          <div class="flex flex-row">
+            <div class="flex flex-row items-center">
+              <span
+                class={`inline-block w-3 h-3 rounded-full ${
+                  playerX.isConnected ? "bg-green-500" : "bg-gray-400"
+                }`}
+              />
             </div>
+            <div class="flex flex-row text-md items-center">
+              <span class="text-2xl font-bold mx-2">X</span> {playerX.name} ({playerX.elo})
+            </div>
+          </div>
+          <div class={`flex flex-row text-md font-bold ${ timeX < 30 ? "text-red-600" : "text-gray-600" }`}>
+            {formatTime(timeX)}
+          </div>
         </div>
-        <div>
-          <span
-            class={`inline-block w-2 h-2 rounded-full mr-1 ${
-              playerO.isConnected ? "bg-green-500" : "bg-gray-400"
-            }`}
-          ></span>
-          <span class="font-bold">O:</span> {playerO.name} ({playerO.elo})
-          <div
-          class={`text-sm font-bold ${
-            timeO < 30 ? "text-red-600" : "text-gray-600"
-          }`}
-          >
-          {formatTime(timeO)}
+        <div class="flex flex-col mb-2">
+          <div class="flex flex-row">
+            <div class="flex flex-row items-center">
+              <span
+                class={`inline-block w-3 h-3 rounded-full ${
+                  playerO.isConnected ? "bg-green-500" : "bg-gray-400"
+                }`}
+              />
+            </div>
+            <div class="flex flex-row text-md items-center">
+              <span class="text-2xl font-bold mx-2">O</span> {playerO.name} ({playerO.elo})
+            </div>
+          </div>
+          <div class={`flex flex-row text-md font-bold ${ timeO < 30 ? "text-red-600" : "text-gray-600" }`}>
+            {formatTime(timeO)}
           </div>
         </div>
       </div>
@@ -85,7 +89,7 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
       {/* Ploys */}
       <div>
         <h2 class="font-bold mb-2">Moves</h2>
-        <div ref={movesContainerRef} class="max-h-48 overflow-y-auto">
+        <div ref={movesContainerRef} class="max-h-40 overflow-y-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b">

@@ -13,12 +13,12 @@ export default function Space({ x, y, value, isSelected, isWinning, onClick }: S
 
   return (
     <div
-      class={`w-16 h-16 flex items-center justify-center border
+      class={`w-[5vh] h-[5vh] sm:w-[5vw] sm:h-[5vw] flex items-center justify-center border
         ${isWinning ? "bg-green-300" : isSelected ? "bg-yellow-300" : isDark ? "bg-gray-500" : "bg-gray-200"}
       `}
       onClick={onClick}
     >
-      <h2 class="font-bold">{value}</h2>
+      <h2 class="font-bold text-xl sm:text-3xl">{value}</h2>
     </div>
   );
 }
