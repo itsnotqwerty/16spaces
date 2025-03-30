@@ -14,9 +14,9 @@ export default function Ploy({ index, xMove, oMove }: PloyProps) {
 
   return (
     <tr>
-      <td class={`text-xs text-center ${getCellClass(0)}`}>{index}</td>
-      <td class={`text-xs text-center ${getCellClass(1)}`}>{xMove || "—"}</td>
-      <td class={`text-xs text-center ${getCellClass(2)}`}>{oMove || "—"}</td>
+      <td class={`text-md text-center ${getCellClass(0)}`}>{index}</td>
+      <td class={`text-md text-center ${getCellClass(1)}`}>{xMove || "—"}</td>
+      <td class={`text-md text-center ${getCellClass(2)}`}>{oMove || "—"}</td>
     </tr>
   );
 }

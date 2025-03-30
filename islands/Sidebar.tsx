@@ -52,11 +52,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
                 }`}
               />
             </div>
-            <div class="flex flex-row text-md items-center">
+            <div class="flex flex-row text-xl items-center">
               <span class="text-2xl font-bold mx-2">X</span> {playerX.name} ({playerX.elo})
             </div>
           </div>
-          <div class={`flex flex-row text-md font-bold ${ timeX < 30 ? "text-red-600" : "text-gray-600" }`}>
+          <div class={`flex flex-row text-xl font-bold ${ timeX < 30 ? "text-red-600" : "text-gray-600" }`}>
             {formatTime(timeX)}
           </div>
         </div>
@@ -69,11 +69,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
                 }`}
               />
             </div>
-            <div class="flex flex-row text-md items-center">
+            <div class="flex flex-row text-xl items-center">
               <span class="text-2xl font-bold mx-2">O</span> {playerO.name} ({playerO.elo})
             </div>
           </div>
-          <div class={`flex flex-row text-md font-bold ${ timeO < 30 ? "text-red-600" : "text-gray-600" }`}>
+          <div class={`flex flex-row text-xl font-bold ${ timeO < 30 ? "text-red-600" : "text-gray-600" }`}>
             {formatTime(timeO)}
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
       {/* Ploys */}
       <div>
         <h2 class="font-bold mb-2">Moves</h2>
-        <div ref={movesContainerRef} class="max-h-40 overflow-y-auto">
+        <div ref={movesContainerRef} class="max-h-64 overflow-y-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b">
