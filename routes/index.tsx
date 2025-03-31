@@ -5,7 +5,6 @@ export default function Home() {
     <div class="p-4 mx-auto h-screen bg-[#161512]">
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580"
         crossorigin="anonymous"></script>
-        {'<!-- Sidebar -->'}
         <ins class="adsbygoogle block"
             data-ad-client="ca-pub-2088911413615580"
             data-ad-slot="1847367891"
@@ -22,7 +21,6 @@ export default function Home() {
       </div>
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580"
         crossorigin="anonymous"></script>
-        {'<!-- Sidebar -->'}
         <ins class="adsbygoogle block"
             data-ad-client="ca-pub-2088911413615580"
             data-ad-slot="1847367891"
