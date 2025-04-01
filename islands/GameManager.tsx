@@ -1,4 +1,4 @@
-import { useState, useEffect } from "preact/hooks";
+import { useState, useEffect, useRef } from "preact/hooks";
 import Board from "./Board.tsx";
 import Sidebar from "./Sidebar.tsx";
 
@@ -26,83 +26,121 @@ export default function GameManager() {
     isConnected: false,
   });
   const [ploys, setPloys] = useState<Ploy[]>([]);
-  const [maxTime, setMaxTime] = useState(150); // Set initial max time
-  const [timeX, setTimeX] = useState(maxTime);
-  const [timeO, setTimeO] = useState(maxTime);
-  const [timerActive, setTimerActive] = useState(false);
+  const [maxTime, setMaxTime] = useState(150); // Max time for each player in seconds
+  const [timeX, setTimeX] = useState(maxTime); // Initial time for player X
+  const [timeO, setTimeO] = useState(maxTime); // Initial time for player O
   const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
   const [winState, setWinState] = useState<"X" | "O" | null>(null); // Track the winner
+  const [timerActive, setTimerActive] = useState(false);
 
+  const socketRef = useRef<WebSocket | null>(null);
+
+  // Initialize WebSocket connection
   useEffect(() => {
-    let timer: number | undefined;
+    const socket = new WebSocket("ws://localhost:8000/ws"); // Replace with your WebSocket server URL
+    socketRef.current = socket;
 
-    if (timerActive && !winState) {
-      timer = setInterval(() => {
-        if (currentPlayer === "X") {
-          setTimeX((prev) => {
-            if (prev <= 1) {
-              setWinState("O"); // Player O wins
-              setTimerActive(false); // Stop the timer
-              return 0;
-            }
-            return prev - 1;
-          });
-        } else {
-          setTimeO((prev) => {
-            if (prev <= 1) {
-              setWinState("X"); // Player X wins
-              setTimerActive(false); // Stop the timer
-              return 0;
-            }
-            return prev - 1;
-          });
-        }
-      }, 1000);
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      // Handle incoming WebSocket messages
+      if (data.type === "state") {
+        setPloys(data.ploys);
+        setCurrentPlayer(data.currentPlayer);
+        setTimeX(data.timeX);
+        setTimeO(data.timeO);
+        setWinState(data.winner);
+      } else if (data.type === "move") {
+        setPloys(data.ploys);
+        setCurrentPlayer(data.currentPlayer);
+        setTimeX(data.timeX);
+        setTimeO(data.timeO);
+      } else if (data.type === "win") {
+        setWinState(data.winner);
+        setTimerActive(false);
+      } else if (data.type === "reset") {
+        handleReset();
+      }
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    socket.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
+
+  const sendMessage = (message: object) => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(message));
     }
-
-    return () => clearInterval(timer);
-  }, [timerActive, currentPlayer, winState]);
+  };
 
   const handleMove = (index: number, xMove: string | null, oMove: string | null) => {
     if (winState) return; // Prevent moves if the game is over
 
-    setPloys((prevPloys) => {
-      const newPloys = [...prevPloys];
-      if (newPloys.length > index) {
-        newPloys.map((ploy, i) => {
-          if (i === index) {
-            ploy.xMove = xMove;
-            ploy.oMove = oMove;
-          }
-          return ploy;
-        });
-      } else {
-        newPloys.push({ index, xMove, oMove });
-      }
-      return newPloys;
-    });
-
-    // Start the timer after the first move
-    if (!timerActive) {
-      setTimerActive(true);
+    const newPloys = [...ploys];
+    if (newPloys.length > index) {
+      newPloys.map((ploy, i) => {
+        if (i === index) {
+          ploy.xMove = xMove;
+          ploy.oMove = oMove;
+        }
+        return ploy;
+      });
+    } else {
+      newPloys.push({ index, xMove, oMove });
     }
 
+    setPloys(newPloys);
+
     // Switch the current player
-    setCurrentPlayer((prev) => (prev === "X" ? "O" : "X"));
+    const nextPlayer = currentPlayer === "X" ? "O" : "X";
+    setCurrentPlayer(nextPlayer);
+
+    // Send move to the server
+    sendMessage({
+      type: "move",
+      ploys: newPloys,
+      currentPlayer: nextPlayer,
+      timeX,
+      timeO,
+    });
   };
 
   const handleWin = (winner: "X" | "O") => {
     setWinState(winner);
-    setTimerActive(false); // Stop the timer
+    setTimerActive(false);
+
+    // Notify the server about the win
+    sendMessage({
+      type: "win",
+      winner,
+    });
   };
 
   const handleReset = () => {
     setPloys([]);
-    setTimeX(maxTime); // Reset to 2:30
-    setTimeO(maxTime); // Reset to 2:30
+    setTimeX(maxTime); // Reset to initial time
+    setTimeO(maxTime); // Reset to initial time
     setCurrentPlayer("X");
     setTimerActive(false);
     setWinState(null); // Clear the winner
+
+    // Notify the server about the reset
+    sendMessage({
+      type: "reset",
+    });
   };
 
   return (

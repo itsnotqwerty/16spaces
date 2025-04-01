@@ -29,6 +29,60 @@ export default function Board(props: BoardProps) {
     oMove: null,
   });
 
+  const reconstructBoard = (ploys: Ploy[]) => {
+    const newBoard: Player[][] = Array(4).fill(null).map(() => Array(4).fill(null));
+    let currentPlayer: Player = "X";
+
+    for (const ploy of ploys) {
+      if (ploy.xMove) {
+        const [from, to] = ploy.xMove.split("->");
+        if (to) {
+          // Move stone
+          const [fromCol, fromRow] = [from.charCodeAt(0) - 65, parseInt(from[1]) - 1];
+          const [toCol, toRow] = [to.charCodeAt(0) - 65, parseInt(to[1]) - 1];
+          newBoard[fromRow][fromCol] = null;
+          newBoard[toRow][toCol] = "X";
+        } else {
+          // Place stone
+          const [col, row] = [from.charCodeAt(0) - 65, parseInt(from[1]) - 1];
+          newBoard[row][col] = "X";
+        }
+      }
+
+      if (ploy.oMove) {
+        const [from, to] = ploy.oMove.split("->");
+        if (to) {
+          // Move stone
+          const [fromCol, fromRow] = [from.charCodeAt(0) - 65, parseInt(from[1]) - 1];
+          const [toCol, toRow] = [to.charCodeAt(0) - 65, parseInt(to[1]) - 1];
+          newBoard[fromRow][fromCol] = null;
+          newBoard[toRow][toCol] = "O";
+        } else {
+          // Place stone
+          const [col, row] = [from.charCodeAt(0) - 65, parseInt(from[1]) - 1];
+          newBoard[row][col] = "O";
+        }
+      }
+
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+    }
+
+    setBoard(newBoard);
+    setCurrentPlayer(currentPlayer);
+  };
+
+  const handleWebsocketUpdate = (data: any) => {
+    if (data.type === "move") {
+      setCurrentPloy(data);
+      reconstructBoard(data.ploys);
+    } else if (data.type === "win") {
+      props.winHook(data.winner); // Notify GameManager of the winner
+      setWinningLine(data.line);
+    } else if (data.type === "reset") {
+      resetGame();
+    }
+  }
+
   const handleCellClick = (x: number, y: number) => {
     if (props.winState) return; // Ignore clicks if the game is over
 
