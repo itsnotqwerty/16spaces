@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useState, useEffect, useRef } from "preact/hooks";
 import Space from "../components/Space.tsx";
 
 type Player = "X" | "O" | null;
@@ -14,20 +14,25 @@ type BoardProps = {
   resetHook: () => void;
   winHook: (winner: "X" | "O") => void;
   winState: "X" | "O" | null;
+  currentPlayer: "X" | "O";
+  ploys: Ploy[];
 };
 
 export default function Board(props: BoardProps) {
   const [board, setBoard] = useState<Player[][]>(
     Array(4).fill(Array(4).fill(null))
   );
-  const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
+  const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
   const [selectedStone, setSelectedStone] = useState<{ x: number; y: number } | null>(null);
   const [winningLine, setWinningLine] = useState<number[][] | null>(null);
-  const [currentPloy, setCurrentPloy] = useState<Ploy | null>({
-    index: 0,
-    xMove: null,
-    oMove: null,
-  });
+  const [moves, setMoves] = useState<Ploy[]>([]); // Initialize moves with the ploys from props
+
+  const socketRef = useRef<WebSocket | null>(null);
+
+  // Reconstruct the board whenever ploys are updated
+  useEffect(() => {
+    reconstructBoard(props.ploys);
+  }, [props.ploys]);
 
   const reconstructBoard = (ploys: Ploy[]) => {
     const newBoard: Player[][] = Array(4).fill(null).map(() => Array(4).fill(null));
@@ -71,126 +76,69 @@ export default function Board(props: BoardProps) {
     setCurrentPlayer(currentPlayer);
   };
 
-  const handleWebsocketUpdate = (data: any) => {
-    if (data.type === "move") {
-      setCurrentPloy(data);
-      reconstructBoard(data.ploys);
-    } else if (data.type === "win") {
-      props.winHook(data.winner); // Notify GameManager of the winner
-      setWinningLine(data.line);
-    } else if (data.type === "reset") {
-      resetGame();
-    }
-  }
-
-  const handleCellClick = (x: number, y: number) => {
-    if (props.winState) return; // Ignore clicks if the game is over
-
-    if (selectedStone) {
-      // Deselect the currently selected stone if clicked again
-      if (selectedStone.x === x && selectedStone.y === y) {
-        setSelectedStone(null);
-        return;
-      }
-
-      // Move an existing stone
-      if (board[x][y] === null && isAdjacent(selectedStone, { x, y })) {
-        const newBoard = board.map((row, i) =>
-          row.map((cell, j) =>
-            i === x && j === y
-              ? currentPlayer
-              : i === selectedStone.x && j === selectedStone.y
-              ? null
-              : cell
-          )
-        );
-
-        const moveRepresentation = `${String.fromCharCode(65 + selectedStone.y)}${selectedStone.x + 1}->${String.fromCharCode(65 + y)}${x + 1}`;
-        if (currentPlayer === "X") {
-          setCurrentPloy({index: currentPloy!.index, xMove: moveRepresentation, oMove: null});
-          props.moveHook(currentPloy!.index, moveRepresentation, null); // Notify GameManager of the move
-        } else if (currentPlayer === "O") {
-          setCurrentPloy({ index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation });
-          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation); // Notify GameManager of the move
-          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null }); // Increment the index for the next move
-        }
-
-        setBoard(newBoard);
-        setSelectedStone(null);
-
-        const winResult = checkWin(newBoard);
-        if (winResult) {
-          props.winHook(winResult.winner); // Notify GameManager of the winner
-          setWinningLine(winResult.line);
-        }
-
-        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-      }
-    } else {
-      // Place a new stone
-      if (board[x][y] === null && countStones(currentPlayer) < 5) {
-        const newBoard = board.map((row, i) =>
-          row.map((cell, j) => (i === x && j === y ? currentPlayer : cell))
-        );
-
-        const moveRepresentation = `${String.fromCharCode(65 + y)}${x + 1}`;
-        if (currentPlayer === "X") {
-          setCurrentPloy({index: currentPloy!.index, xMove: moveRepresentation, oMove: null});
-          props.moveHook(currentPloy!.index, moveRepresentation, null); // Notify GameManager of the move
-        } else if (currentPlayer === "O") {
-          setCurrentPloy({ index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation });
-          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation); // Notify GameManager of the move
-          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null }); // Increment the index for the next move
-        }
-
-        setBoard(newBoard);
-
-        const winResult = checkWin(newBoard);
-        if (winResult) {
-          props.winHook(winResult.winner); // Notify GameManager of the winner
-          setWinningLine(winResult.line);
-        }
-
-        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-      } else if (board[x][y] === currentPlayer) {
-        setSelectedStone({ x, y });
-      }
-    }
-  };
-
-  const isAdjacent = (from: { x: number; y: number }, to: { x: number; y: number }) => {
-    const dx = Math.abs(from.x - to.x);
-    const dy = Math.abs(from.y - to.y);
-    return dx <= 1 && dy <= 1 && (dx + dy > 0);
-  };
-
-  const countStones = (player: Player) =>
-    board.flat().filter((cell) => cell === player).length;
-
-  const checkWin = (boardPos: Player[][]): { winner: "X" | "O"; line: number[][] } | null => {
-    const lines = [
-      ...boardPos.map((row, i) => row.map((_, j) => [i, j])), // Rows
-      ...boardPos[0].map((_, col) => boardPos.map((_, row) => [row, col])), // Columns
-      boardPos.map((_, i) => [i, i]), // Main diagonal
-      boardPos.map((_, i) => [i, boardPos.length - 1 - i]), // Anti-diagonal
-    ];
-
-    for (const line of lines) {
-      const cells = line.map(([x, y]) => boardPos[x][y]);
-      if (cells.every((cell) => cell === "X")) return { winner: "X", line };
-      if (cells.every((cell) => cell === "O")) return { winner: "O", line };
-    }
-
-    return null;
-  };
-
   const resetGame = () => {
     setBoard(Array(4).fill(Array(4).fill(null))); // Clear the board
     setCurrentPlayer("X"); // Reset to player X
     setSelectedStone(null); // Clear selected stone
     setWinningLine(null); // Clear winning line
-    setCurrentPloy({ index: 0, xMove: null, oMove: null }); // Reset ploy
+    setMoves([]); // Clear moves
     props.resetHook(); // Call the reset hook
+  };
+
+  const handleMove = (move: string) => {
+    const [from, to] = move.split("->");
+    if (to) {
+      // Move stone
+      const [fromCol, fromRow] = [from.charCodeAt(0) - 65, parseInt(from[1]) - 1];
+      const [toCol, toRow] = [to.charCodeAt(0) - 65, parseInt(to[1]) - 1];
+      setBoard((prevBoard) => {
+        const newBoard = prevBoard.map((row) => [...row]); // Deep copy of the board
+        newBoard[fromRow][fromCol] = null;
+        newBoard[toRow][toCol] = currentPlayer;
+        return newBoard;
+      });
+    } else {
+      // Place stone
+      const [col, row] = [from.charCodeAt(0) - 65, parseInt(from[1]) - 1];
+      setBoard((prevBoard) => {
+        const newBoard = prevBoard.map((row) => [...row]); // Deep copy of the board
+        newBoard[row][col] = currentPlayer;
+        return newBoard;
+      });
+    }
+  };
+
+  const handleClick = (x: number, y: number) => {
+    if (props.winState) return; // Prevent moves if the game is over
+
+    if (selectedStone) {
+      // If a stone is already selected, move it
+      if (selectedStone.x === x && selectedStone.y === y) {
+        // Deselect the stone if clicked again
+        setSelectedStone(null);
+        return;
+      }
+
+      if (board[x][y] === null) {
+        // Move the stone to an empty space
+        const move = `${String.fromCharCode(selectedStone.y + 65)}${selectedStone.x + 1}->${String.fromCharCode(y + 65)}${x + 1}`;
+        handleMove(move);
+        setSelectedStone(null); // Deselect the stone after moving
+      }
+    } else {
+      if (board[x][y] === null) {
+        // Place a new stone if the clicked space is empty
+        const move = `${String.fromCharCode(y + 65)}${x + 1}`;
+        handleMove(move);
+        setMoves((prevMoves) => [
+          ...prevMoves,
+          { index: moves.length, xMove: currentPlayer === "X" ? move : null, oMove: currentPlayer === "O" ? move : null },
+        ]);
+      } else if (board[x][y] === currentPlayer) {
+        // Select the stone if it belongs to the current player
+        setSelectedStone({ x, y });
+      }
+    }
   };
 
   return (
@@ -217,16 +165,11 @@ export default function Board(props: BoardProps) {
                 value={cell}
                 isSelected={selectedStone?.x === x && selectedStone?.y === y}
                 isWinning={winningLine?.some(([wx, wy]) => wx === x && wy === y) || false}
-                onClick={() => handleCellClick(x, y)}
+                onClick={() => handleClick(x, y)}
               />
             ))}
           </div>
         ))}
-      </div>
-      <div class="flex flex-row justify-center sm:justify-start items-center space-x-4">
-        <button class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
-          Reset Game
-        </button>
       </div>
     </div>
   );

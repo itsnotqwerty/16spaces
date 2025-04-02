@@ -1,4 +1,4 @@
-import { HandlerContext } from "$fresh/server.ts";
+import { FreshContext } from "$fresh/server.ts";
 
 type GameState = {
   ploys: Ploy[],
@@ -16,7 +16,7 @@ type Ploy = {
 
 type Player = "X" | "O" | null;
 
-const clients = new Set<WebSocket>();
+const rooms: Record<string, Set<WebSocket>> = {};
 
 const checkWin = (boardPos: Player[][]): { winner: "X" | "O"; line: number[][] } | null => {
   const lines = [
@@ -76,7 +76,7 @@ const reconstructBoard = (ploys: Ploy[]): Player[][] => {
   return newBoard;
 };
 
-export const handler = (req: Request, _ctx: HandlerContext): Response => {
+export const handler = (req: Request, _ctx: FreshContext): Response => {
   let gameState: GameState = {
     ploys: [],
     currentPlayer: "X",
@@ -89,26 +89,31 @@ export const handler = (req: Request, _ctx: HandlerContext): Response => {
 
   socket.onopen = () => {
     console.log("WebSocket connection established");
-    clients.add(socket);
-
-    // Send the current game state to the newly connected client
-    socket.send(JSON.stringify({ type: "state", ...gameState }));
   };
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
-    if (data.type === "move") {
+    if (data.type === "connect") {
+      const room = data.room;
+      if (!rooms[room]) {
+        rooms[room] = new Set();
+      }
+      rooms[room].add(socket);
+      console.log(`Client connected to room: ${room}`);
+
+      // Send the current game state to the newly connected client
+      socket.send(JSON.stringify({ type: "state", ...gameState }));
+    } else if (data.type === "move") {
       gameState = { ...gameState, ...data };
       const board = reconstructBoard(gameState.ploys);
-      broadcast(JSON.stringify({ type: "move", ...gameState }));
+      broadcastToRoom(data.room, JSON.stringify({ type: "move", ...gameState }));
       const winner = checkWin(board);
       if (winner) {
         const winningPlayer = winner.winner;
-        broadcast(JSON.stringify({ type: "win", winner: winningPlayer, line: winner.line }));
+        broadcastToRoom(data.room, JSON.stringify({ type: "win", winner: winningPlayer, line: winner.line }));
         gameState.winner = winningPlayer;
       }
-
     } else if (data.type === "reset") {
       gameState = {
         ploys: [],
@@ -117,27 +122,33 @@ export const handler = (req: Request, _ctx: HandlerContext): Response => {
         timeO: 150,
         winner: null,
       };
-      broadcast(JSON.stringify({ type: "reset" }));
+      broadcastToRoom(data.room, JSON.stringify({ type: "reset" }));
     }
   };
 
   socket.onclose = () => {
     console.log("WebSocket connection closed");
-    clients.delete(socket);
+    for (const room in rooms) {
+      rooms[room].delete(socket);
+      if (rooms[room].size === 0) {
+        delete rooms[room];
+      }
+    }
   };
 
   socket.onerror = (err) => {
     console.error("WebSocket error:", err);
-    clients.delete(socket);
   };
 
   return response;
 };
 
-function broadcast(message: string) {
-  for (const client of clients) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
+function broadcastToRoom(room: string, message: string) {
+  if (rooms[room]) {
+    for (const client of rooms[room]) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
     }
   }
 }

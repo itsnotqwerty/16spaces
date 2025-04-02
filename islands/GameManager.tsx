@@ -150,6 +150,8 @@ export default function GameManager() {
         resetHook={handleReset}
         winHook={handleWin}
         winState={winState}
+        currentPlayer={currentPlayer}
+        ploys={ploys}
       />
       <Sidebar
         playerX={playerX}
