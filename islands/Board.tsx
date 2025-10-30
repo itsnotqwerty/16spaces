@@ -184,7 +184,7 @@ export default function Board(props: BoardProps) {
       </div>
       {
         rulesShowing && (
-          <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-4 text-white bg-[#161512] border-2 border-white rounded p-4 z-50 sm:block">
+          <div class="absolute top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 min-w-[80%] mt-4 text-white bg-[#161512] border-2 border-white rounded p-4 z-50 sm:block">
               <h2 class="text-lg font-bold mb-2">Game Rules:</h2>
               <ul class="list-disc list-inside">
               <li>Players take turns placing or moving their stones on the 4x4 board.</li>
