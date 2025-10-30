@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 import Space from "../components/Space.tsx";
+import Rules from "../components/Rules.tsx";
 
 type Player = "X" | "O" | null;
 
@@ -139,6 +140,11 @@ export default function Board(props: BoardProps) {
     props.resetHook(); // Call the reset hook
   };
 
+  const [rulesShowing, setRulesShowing] = useState(false);
+  const toggleRules = () => {
+    setRulesShowing(!rulesShowing);
+  };
+
   return (
     <div class="my-2 ml-0 mr-4">
       {/* Top labels */}
@@ -170,10 +176,30 @@ export default function Board(props: BoardProps) {
         ))}
       </div>
       <div class="flex flex-row justify-center sm:justify-start items-center space-x-4">
-        <button class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
+        <button type="button" class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
           Reset Game
         </button>
+        <button type="button" class="mt-4 p-2 bg-blue-500 text-white rounded" onClick={toggleRules}>
+          Show Rules
+        </button>
       </div>
+      {
+        rulesShowing && (
+          <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-4 text-white bg-[#161512] border-2 border-white rounded p-4 z-50 sm:block">
+              <h2 class="text-lg font-bold mb-2">Game Rules:</h2>
+              <ul class="list-disc list-inside">
+              <li>Players take turns placing or moving their stones on the 4x4 board.</li>
+              <li>Each player can have a maximum of 5 stones on the board at any time.</li>
+              <li>To place a stone, click on an empty space. To move a stone, click on your stone and then on an adjacent empty space.</li>
+              <li>The first player to align 4 of their stones horizontally, vertically, or diagonally wins the game.</li>
+              <li>If a player's time runs out, their opponent wins the game.</li>
+              <button type="button" class="mt-4 p-2 bg-red-500 text-white rounded" onClick={toggleRules}>
+                Close Rules
+              </button>
+            </ul>
+          </div>
+        )
+      }
     </div>
   );
 }
