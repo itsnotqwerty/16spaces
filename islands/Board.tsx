@@ -1,6 +1,5 @@
 import { useState } from "preact/hooks";
 import Space from "../components/Space.tsx";
-import Rules from "../components/Rules.tsx";
 
 type Player = "X" | "O" | null;
 

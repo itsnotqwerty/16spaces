@@ -92,8 +92,8 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
         <div ref={movesContainerRef} class="
           max-h-64 overflow-y-auto
           [&::-webkit-scrollbar]:w-2
-        [&::-webkit-scrollbar-track]:bg-gray-200
-        [&::-webkit-scrollbar-thumb]:bg-gray-500
+          [&::-webkit-scrollbar-track]:bg-gray-200
+          [&::-webkit-scrollbar-thumb]:bg-gray-500
           [&::-webkit-scrollbar-thumb]:rounded-full
         ">
           <table class="w-full text-left border-collapse">

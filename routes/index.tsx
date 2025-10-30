@@ -2,7 +2,7 @@ import GameManager from "../islands/GameManager.tsx";
 
 export default function Home() {
   return (
-    <div class="p-4 mx-auto h-screen bg-[#161512]">
+    <div class="p-4 mx-auto min-h-screen bg-[#161512]">
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580"
         crossorigin="anonymous"></script>
         <ins class="adsbygoogle block"
