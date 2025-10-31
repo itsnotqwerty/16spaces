@@ -9,6 +9,22 @@ export default function App({ Component }: PageProps) {
         <title>16spaces</title>
         <link rel="stylesheet" href="/styles.css" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580" crossorigin="anonymous"></script>
+        <title>16spaces | Multiplayer Web Game</title>
+        
+        <meta name="title" content="16spaces | Multiplayer Web Game" />
+        <meta name="description" content="16spaces is a web game and variant of Tic-Tac-Toe" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://16space.deno.dev" />
+        <meta property="og:title" content="16spaces | Multiplayer Web Game" />
+        <meta property="og:description" content="16spaces is a web game and variant of Tic-Tac-Toe" />
+        <meta property="og:image" content="https://metatags.io/images/meta-tags.png" />
+
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://16space.deno.dev" />
+        <meta property="twitter:title" content="16spaces | Multiplayer Web Game" />
+        <meta property="twitter:description" content="16spaces is a web game and variant of Tic-Tac-Toe" />
+        <meta property="twitter:image" content="https://metatags.io/images/meta-tags.png" />
       </head>
       <body>
         <Component />
