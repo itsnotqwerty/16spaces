@@ -18,13 +18,13 @@ export default function App({ Component }: PageProps) {
         <meta property="og:url" content="https://16space.deno.dev" />
         <meta property="og:title" content="16spaces | Multiplayer Web Game" />
         <meta property="og:description" content="16spaces is a web game and variant of Tic-Tac-Toe" />
-        <meta property="og:image" content="https://metatags.io/images/meta-tags.png" />
+        <meta property="og:image" content="/embed.png" />
 
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://16space.deno.dev" />
         <meta property="twitter:title" content="16spaces | Multiplayer Web Game" />
         <meta property="twitter:description" content="16spaces is a web game and variant of Tic-Tac-Toe" />
-        <meta property="twitter:image" content="https://metatags.io/images/meta-tags.png" />
+        <meta property="twitter:image" content="/embed.png" />
       </head>
       <body>
         <Component />
