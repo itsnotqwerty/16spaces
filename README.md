@@ -1,7 +1,6 @@
-# Fresh project
+# 16spaces
 
-Your new Fresh project is ready to go. You can follow the Fresh "Getting
-Started" guide here: https://fresh.deno.dev/docs/getting-started
+16spaces is a web game and variant of Tic-Tac-Toe. 
 
 ### Usage
 
@@ -12,5 +11,3 @@ Then start the project:
 ```
 deno task start
 ```
-
-This will watch the project directory and restart as necessary.
