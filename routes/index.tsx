@@ -19,6 +19,7 @@ export default function Home() {
           <GameManager />
         </div>
       </div>
+      <p class="max-w-screen-md mx-auto flex flex-row justify-center items-center text-white">©2025 Samuel Roux - All rights reserved</p>
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580"
         crossorigin="anonymous"></script>
         <ins class="adsbygoogle block"
