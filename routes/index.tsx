@@ -14,7 +14,7 @@ export default function Home() {
             (adsbygoogle = window.adsbygoogle || []).push({});
         </script>
       <div class="max-w-screen-md mx-auto flex flex-col items-center justify-center">
-        <h1 class="text-4xl text-white font-bold">Welcome to 16spaces</h1>
+        <h1 class="text-4xl text-white font-bold text-center sm:text-left">Welcome to 16spaces</h1>
         <div class="flex flex-row items-center justify-center w-full mt-4 space-x-4">
           <GameManager />
         </div>
