@@ -20,6 +20,7 @@ export default function Home() {
         </div>
       </div>
       <p class="max-w-screen-md mx-auto flex flex-row justify-center items-center text-white">©2025 Samuel Roux - All rights reserved</p>
+      <span class="max-w-screen-md mx-auto flex flex-row justify-center items-center"><a href="https://github.com/itsnotqwerty/16spaces/" class="text-blue-400">View the Code</a></span>
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580"
         crossorigin="anonymous"></script>
         <ins class="adsbygoogle block"
