@@ -163,6 +163,7 @@ install -d -m 0755 /etc/nginx/sites-available
 install -d -m 0755 /etc/nginx/sites-enabled
 install -m 0644 "$tmp_nginx" /etc/nginx/sites-available/16spaces.conf
 ln -sf /etc/nginx/sites-available/16spaces.conf /etc/nginx/sites-enabled/16spaces.conf
+rm -f /etc/nginx/sites-enabled/default
 
 install -m 0644 "$tmp_service" /etc/systemd/system/16spaces.service
 
