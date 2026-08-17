@@ -43,12 +43,12 @@ export default function HomeMenu() {
       <MenuButton
         href="/queue?rated=0"
         label="Play Unrated"
-        description="Join the unrated queue flow (scaffold route)."
+        description="Join the unrated queue flow."
       />
       <MenuButton
         href="/queue?rated=1"
         label="Play Rated"
-        description="Join the rated queue flow (scaffold route)."
+        description="Join the rated queue flow."
       />
       <MenuButton
         href="/ai"

@@ -148,11 +148,26 @@ export function chooseAiMove(
   return best;
 }
 
-/** Picks a response delay within the difficulty's window. */
+/**
+ * Picks a response delay within the difficulty's window, capped so the AI
+ * never burns more than `maxFraction` of its remaining time. This keeps the
+ * AI from stalling out low-time (e.g. bullet) matches.
+ */
 export function pickDelayMs(
   difficulty: AiDifficulty,
+  remainingMs?: number,
   random: () => number = Math.random,
 ): number {
   const { minDelayMs, maxDelayMs } = AI_LEVELS[difficulty];
-  return minDelayMs + Math.floor(random() * (maxDelayMs - minDelayMs + 1));
+  let delay = minDelayMs + Math.floor(random() * (maxDelayMs - minDelayMs + 1));
+
+  if (remainingMs !== undefined && Number.isFinite(remainingMs)) {
+    // Never think longer than a fifth of the remaining clock (and leave a
+    // small buffer so the move lands before the flag falls).
+    const cap = Math.max(200, Math.floor(remainingMs / 5) - 100);
+    delay = Math.min(delay, cap);
+    delay = Math.max(delay, 200); // keep a minimum think time
+  }
+
+  return delay;
 }

@@ -19,9 +19,7 @@ export default function Home({ data }: PageProps<HomeData>) {
       <div class="space-y-6">
         <h1 class="text-4xl font-bold">Welcome to 16spaces</h1>
         <p class="text-gray-300 max-w-2xl">
-          The multiplayer transition is underway. Start with local hot-seat now,
-          and online play, auth, lobbies, and matchmaking will roll out in
-          phases.
+          Update: 16spaces is now in open beta! You can play unrated games without signing in, but you will need to create an account to play rated games. Sign up or log in to get started.
         </p>
         <HomeMenu />
       </div>
