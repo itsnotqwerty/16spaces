@@ -90,8 +90,25 @@ elif [[ -x /usr/bin/deno ]]; then
 elif [[ -x /root/.deno/bin/deno ]]; then
   deno_bin="/root/.deno/bin/deno"
 else
-  echo "Could not find a deno binary on this server. Install Deno or add it to PATH, then rerun." >&2
-  exit 1
+  if command -v curl >/dev/null 2>&1; then
+    echo "Deno not found; bootstrapping it with the official installer..."
+    curl -fsSL https://deno.land/install.sh | sh >/dev/null
+  elif command -v wget >/dev/null 2>&1; then
+    echo "Deno not found; bootstrapping it with the official installer..."
+    wget -qO- https://deno.land/install.sh | sh >/dev/null
+  else
+    echo "Could not find a deno binary on this server, and curl/wget are unavailable to install it automatically." >&2
+    exit 1
+  fi
+
+  if [[ -x /root/.deno/bin/deno ]]; then
+    deno_bin="/root/.deno/bin/deno"
+  elif command -v deno >/dev/null 2>&1; then
+    deno_bin="$(command -v deno)"
+  else
+    echo "Deno installation did not produce a usable binary. Check the install output and rerun." >&2
+    exit 1
+  fi
 fi
 
 if ! id -u "$app_user" >/dev/null 2>&1; then
