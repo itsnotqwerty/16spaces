@@ -80,6 +80,20 @@ if [[ ! -f "$nginx_template" || ! -f "$service_template" ]]; then
   exit 1
 fi
 
+deno_bin=""
+if command -v deno >/dev/null 2>&1; then
+  deno_bin="$(command -v deno)"
+elif [[ -x /usr/local/bin/deno ]]; then
+  deno_bin="/usr/local/bin/deno"
+elif [[ -x /usr/bin/deno ]]; then
+  deno_bin="/usr/bin/deno"
+elif [[ -x /root/.deno/bin/deno ]]; then
+  deno_bin="/root/.deno/bin/deno"
+else
+  echo "Could not find a deno binary on this server. Install Deno or add it to PATH, then rerun." >&2
+  exit 1
+fi
+
 if ! id -u "$app_user" >/dev/null 2>&1; then
   useradd --system --create-home --shell /usr/sbin/nologin --user-group "$app_user"
 fi
@@ -119,7 +133,7 @@ sed \
   -e "s|__APP_DIR__|${project_dir}|g" \
   -e "s|__PORT__|${port}|g" \
   -e "s|__ENV_FILE__|${env_dest}|g" \
-  -e "s|__DENO_BIN__|/usr/bin/env deno|g" \
+  -e "s|__DENO_BIN__|${deno_bin}|g" \
   "$service_template" > "$tmp_service"
 
 install -d -m 0755 /etc/nginx/sites-available
