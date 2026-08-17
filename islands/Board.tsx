@@ -12,7 +12,7 @@ type BoardProps = {
   currentPlayer: Player;
   winningLine: [number, number][] | null;
   onIntent: (move: Move) => void;
-  onReset: () => void;
+  onReset?: () => void;
   winState: Player | null;
 };
 
@@ -53,7 +53,7 @@ export default function Board(props: BoardProps) {
 
   const resetGame = () => {
     setSelectedStone(null); // Clear selected stone
-    props.onReset(); // Call the reset hook
+    props.onReset?.(); // Call the reset hook
   };
 
   const [rulesShowing, setRulesShowing] = useState(false);
@@ -67,7 +67,10 @@ export default function Board(props: BoardProps) {
       <div class="grid grid-cols-[2rem_repeat(4,minmax(0,1fr))] sm:grid-cols-[2.25rem_repeat(4,minmax(0,1fr))] gap-1 mb-2">
         <div></div> {/* Empty corner */}
         {["A", "B", "C", "D"].map((label) => (
-          <div key={label} class="text-center text-xl sm:text-2xl text-white font-bold">
+          <div
+            key={label}
+            class="text-center text-xl sm:text-2xl text-white font-bold"
+          >
             {label}
           </div>
         ))}
@@ -75,7 +78,10 @@ export default function Board(props: BoardProps) {
       {/* Board with side labels */}
       <div class="grid grid-rows-4 gap-1">
         {props.board.map((row, x) => (
-          <div key={x} class="grid grid-cols-[2rem_repeat(4,minmax(0,1fr))] sm:grid-cols-[2.25rem_repeat(4,minmax(0,1fr))] gap-1">
+          <div
+            key={x}
+            class="grid grid-cols-[2rem_repeat(4,minmax(0,1fr))] sm:grid-cols-[2.25rem_repeat(4,minmax(0,1fr))] gap-1"
+          >
             <div class="flex items-center justify-center text-xl sm:text-2xl text-white font-bold">
               {x + 1}
             </div>
@@ -97,13 +103,15 @@ export default function Board(props: BoardProps) {
         ))}
       </div>
       <div class="flex flex-row justify-center sm:justify-start items-center space-x-4">
-        <button
-          type="button"
-          class="mt-4 p-2 bg-red-500 text-white rounded"
-          onClick={resetGame}
-        >
-          Reset Game
-        </button>
+        {props.onReset && (
+          <button
+            type="button"
+            class="mt-4 p-2 bg-red-500 text-white rounded"
+            onClick={resetGame}
+          >
+            Reset Game
+          </button>
+        )}
         <button
           type="button"
           class="mt-4 p-2 bg-blue-500 text-white rounded"

@@ -12,12 +12,24 @@ import * as $api_auth_logout from "./routes/api/auth/logout.ts";
 import * as $api_auth_magic from "./routes/api/auth/magic.ts";
 import * as $api_auth_session from "./routes/api/auth/session.ts";
 import * as $api_auth_signup from "./routes/api/auth/signup.ts";
+import * as $api_gameplay_move from "./routes/api/gameplay/move.ts";
+import * as $api_gameplay_resign from "./routes/api/gameplay/resign.ts";
+import * as $api_gameplay_state from "./routes/api/gameplay/state.ts";
 import * as $api_health from "./routes/api/health.ts";
+import * as $api_lobbies_code_heartbeat from "./routes/api/lobbies/[code]/heartbeat.ts";
+import * as $api_lobbies_code_index from "./routes/api/lobbies/[code]/index.ts";
+import * as $api_lobbies_code_join from "./routes/api/lobbies/[code]/join.ts";
+import * as $api_lobbies_code_leave from "./routes/api/lobbies/[code]/leave.ts";
+import * as $api_lobbies_code_ready from "./routes/api/lobbies/[code]/ready.ts";
+import * as $api_lobbies_code_start from "./routes/api/lobbies/[code]/start.ts";
+import * as $api_lobbies_shared from "./routes/api/lobbies/_shared.ts";
+import * as $api_lobbies_index from "./routes/api/lobbies/index.ts";
 import * as $api_matchmaking_cancel from "./routes/api/matchmaking/cancel.ts";
-import * as $api_matchmaking_complete from "./routes/api/matchmaking/complete.ts";
 import * as $api_matchmaking_enqueue from "./routes/api/matchmaking/enqueue.ts";
 import * as $api_matchmaking_status from "./routes/api/matchmaking/status.ts";
+import * as $g_id_ from "./routes/g/[id].tsx";
 import * as $index from "./routes/index.tsx";
+import * as $l_code_ from "./routes/l/[code].tsx";
 import * as $l_new from "./routes/l/new.tsx";
 import * as $leaderboard from "./routes/leaderboard.tsx";
 import * as $local from "./routes/local.tsx";
@@ -28,6 +40,9 @@ import * as $AuthForm from "./islands/AuthForm.tsx";
 import * as $Board from "./islands/Board.tsx";
 import * as $GameManager from "./islands/GameManager.tsx";
 import * as $HomeMenu from "./islands/HomeMenu.tsx";
+import * as $LobbyCreate from "./islands/LobbyCreate.tsx";
+import * as $LobbyRoom from "./islands/LobbyRoom.tsx";
+import * as $OnlineGame from "./islands/OnlineGame.tsx";
 import * as $QueueWait from "./islands/QueueWait.tsx";
 import * as $Sidebar from "./islands/Sidebar.tsx";
 import type { Manifest } from "$fresh/server.ts";
@@ -44,12 +59,24 @@ const manifest = {
     "./routes/api/auth/magic.ts": $api_auth_magic,
     "./routes/api/auth/session.ts": $api_auth_session,
     "./routes/api/auth/signup.ts": $api_auth_signup,
+    "./routes/api/gameplay/move.ts": $api_gameplay_move,
+    "./routes/api/gameplay/resign.ts": $api_gameplay_resign,
+    "./routes/api/gameplay/state.ts": $api_gameplay_state,
     "./routes/api/health.ts": $api_health,
+    "./routes/api/lobbies/[code]/heartbeat.ts": $api_lobbies_code_heartbeat,
+    "./routes/api/lobbies/[code]/index.ts": $api_lobbies_code_index,
+    "./routes/api/lobbies/[code]/join.ts": $api_lobbies_code_join,
+    "./routes/api/lobbies/[code]/leave.ts": $api_lobbies_code_leave,
+    "./routes/api/lobbies/[code]/ready.ts": $api_lobbies_code_ready,
+    "./routes/api/lobbies/[code]/start.ts": $api_lobbies_code_start,
+    "./routes/api/lobbies/_shared.ts": $api_lobbies_shared,
+    "./routes/api/lobbies/index.ts": $api_lobbies_index,
     "./routes/api/matchmaking/cancel.ts": $api_matchmaking_cancel,
-    "./routes/api/matchmaking/complete.ts": $api_matchmaking_complete,
     "./routes/api/matchmaking/enqueue.ts": $api_matchmaking_enqueue,
     "./routes/api/matchmaking/status.ts": $api_matchmaking_status,
+    "./routes/g/[id].tsx": $g_id_,
     "./routes/index.tsx": $index,
+    "./routes/l/[code].tsx": $l_code_,
     "./routes/l/new.tsx": $l_new,
     "./routes/leaderboard.tsx": $leaderboard,
     "./routes/local.tsx": $local,
@@ -62,6 +89,9 @@ const manifest = {
     "./islands/Board.tsx": $Board,
     "./islands/GameManager.tsx": $GameManager,
     "./islands/HomeMenu.tsx": $HomeMenu,
+    "./islands/LobbyCreate.tsx": $LobbyCreate,
+    "./islands/LobbyRoom.tsx": $LobbyRoom,
+    "./islands/OnlineGame.tsx": $OnlineGame,
     "./islands/QueueWait.tsx": $QueueWait,
     "./islands/Sidebar.tsx": $Sidebar,
   },

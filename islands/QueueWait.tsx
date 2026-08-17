@@ -16,6 +16,7 @@ type QueueStatusResponse = {
   match: {
     matchId: string;
     rated: boolean;
+    gameId: string | null;
     result: "a_win" | "b_win" | "draw" | null;
     ratingUpdate: {
       deltaA: number;
@@ -40,7 +41,9 @@ export default function QueueWait() {
   const [status, setStatus] = useState<QueueStatusResponse["status"]>("idle");
   const [ticket, setTicket] = useState<QueueTicket | null>(null);
   const [match, setMatch] = useState<QueueStatusResponse["match"]>(null);
-  const [rating, setRating] = useState<QueueStatusResponse["rating"] | null>(null);
+  const [rating, setRating] = useState<QueueStatusResponse["rating"] | null>(
+    null,
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -111,7 +114,9 @@ export default function QueueWait() {
       setStatus("idle");
       setTicket(null);
       setMatch(null);
-      setMessage(data.cancelled ? "Queue cancelled." : "No queue ticket to cancel.");
+      setMessage(
+        data.cancelled ? "Queue cancelled." : "No queue ticket to cancel.",
+      );
     } catch {
       setMessage("Failed to cancel queue.");
     } finally {
@@ -119,38 +124,11 @@ export default function QueueWait() {
     }
   }
 
-  async function completeMatch(result: "win" | "loss" | "draw") {
-    if (!ticket?.matchId) {
-      setMessage("No active match to complete.");
-      return;
-    }
-
-    setSubmitting(true);
-    setMessage(null);
-    try {
-      const response = await fetch("/api/matchmaking/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ matchId: ticket.matchId, result }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setMessage(data.error ?? "Failed to complete match.");
-        return;
-      }
-
-      setMessage("Match completed.");
-      await refreshStatus();
-    } catch {
-      setMessage("Failed to complete match.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   useEffect(() => {
-    fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" })
+    fetch("/api/auth/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
       .then((response) => response.json())
       .then((data) => {
         if (typeof data?.ratedEligible === "boolean") {
@@ -183,6 +161,12 @@ export default function QueueWait() {
     return () => clearInterval(timer);
   }, [status]);
 
+  useEffect(() => {
+    if (status === "matched" && match?.gameId) {
+      globalThis.location.href = `/g/${match.gameId}`;
+    }
+  }, [status, match?.gameId]);
+
   return (
     <div class="rounded border border-white/10 bg-white/5 p-4 space-y-4">
       <div class="grid gap-3 sm:grid-cols-2">
@@ -190,7 +174,8 @@ export default function QueueWait() {
           <span class="block text-xs text-gray-300">Time control</span>
           <select
             value={timeControlId}
-            onChange={(e) => setTimeControlId((e.currentTarget as HTMLSelectElement).value)}
+            onChange={(e) =>
+              setTimeControlId((e.currentTarget as HTMLSelectElement).value)}
             disabled={status === "queued" || submitting}
             class="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white"
           >
@@ -205,7 +190,10 @@ export default function QueueWait() {
           <span class="block text-xs text-gray-300">Mode</span>
           <select
             value={rated ? "rated" : "unrated"}
-            onChange={(e) => setRated((e.currentTarget as HTMLSelectElement).value === "rated")}
+            onChange={(e) =>
+              setRated(
+                (e.currentTarget as HTMLSelectElement).value === "rated",
+              )}
             disabled={status === "queued" || submitting}
             class="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white"
           >
@@ -217,7 +205,8 @@ export default function QueueWait() {
 
       {!ratedEligible && (
         <p class="text-xs text-amber-200">
-          Rated queue requires a non-guest account with a non-placeholder username.
+          Rated queue requires a non-guest account with a non-placeholder
+          username.
         </p>
       )}
 
@@ -249,44 +238,19 @@ export default function QueueWait() {
         <span class="text-sm text-gray-300">
           {status === "idle" && "Not queued"}
           {status === "queued" && "Searching for an opponent..."}
-          {status === "matched" && "Match found. Submit result to apply ELO."}
+          {status === "matched" && "Match found. Taking you to the game..."}
         </span>
       </div>
-
-      {status === "matched" && ticket?.matchId && (
-        <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => completeMatch("win")}
-            disabled={submitting}
-            class="px-3 py-2 rounded bg-emerald-700 hover:bg-emerald-600 disabled:opacity-60"
-          >
-            Report Win
-          </button>
-          <button
-            type="button"
-            onClick={() => completeMatch("draw")}
-            disabled={submitting}
-            class="px-3 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-60"
-          >
-            Report Draw
-          </button>
-          <button
-            type="button"
-            onClick={() => completeMatch("loss")}
-            disabled={submitting}
-            class="px-3 py-2 rounded bg-rose-700 hover:bg-rose-600 disabled:opacity-60"
-          >
-            Report Loss
-          </button>
-        </div>
-      )}
 
       {ticket && (
         <div class="text-xs text-gray-400 space-y-1">
           <p>Ticket: {ticket.ticketId}</p>
-          <p>Queue: {ticket.rated ? "rated" : "unrated"} / {ticket.timeControlId}</p>
-          {queueStartedAt && <p>Joined: {queueStartedAt.toLocaleTimeString()}</p>}
+          <p>
+            Queue: {ticket.rated ? "rated" : "unrated"} / {ticket.timeControlId}
+          </p>
+          {queueStartedAt && (
+            <p>Joined: {queueStartedAt.toLocaleTimeString()}</p>
+          )}
           {ticket.matchId && <p>Match ID: {ticket.matchId}</p>}
         </div>
       )}
@@ -295,9 +259,10 @@ export default function QueueWait() {
         <div class="text-xs text-emerald-200 space-y-1">
           <p>ELO updated for rated match.</p>
           <p>
-            Deltas: A {match.ratingUpdate.deltaA > 0 ? "+" : ""}{match.ratingUpdate.deltaA}, B
-            {" "}
-            {match.ratingUpdate.deltaB > 0 ? "+" : ""}{match.ratingUpdate.deltaB}
+            Deltas: A {match.ratingUpdate.deltaA > 0 ? "+" : ""}
+            {match.ratingUpdate.deltaA}, B{" "}
+            {match.ratingUpdate.deltaB > 0 ? "+" : ""}
+            {match.ratingUpdate.deltaB}
           </p>
         </div>
       )}
@@ -305,7 +270,8 @@ export default function QueueWait() {
       {rating && (
         <div class="text-xs text-gray-300 space-y-1">
           <p>
-            Rating: {rating.rating} ({rating.wins}-{rating.losses}-{rating.draws})
+            Rating: {rating.rating}{" "}
+            ({rating.wins}-{rating.losses}-{rating.draws})
           </p>
           <p>Rated games: {rating.ratedGames}</p>
         </div>

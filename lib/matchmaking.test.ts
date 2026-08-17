@@ -1,12 +1,12 @@
 import { assert, assertEquals } from "$std/assert/mod.ts";
 import {
-  completeMatch,
   enqueueUser,
   getUserTicket,
+  settleMatchResult,
 } from "./matchmaking.ts";
 import { getRatingProfile } from "./ratings.ts";
 
-Deno.test("rated match completion applies rating updates", () => {
+Deno.test("rated match settlement applies rating updates", () => {
   const userA = `mm_a_${crypto.randomUUID().replaceAll("-", "")}`;
   const userB = `mm_b_${crypto.randomUUID().replaceAll("-", "")}`;
 
@@ -17,11 +17,7 @@ Deno.test("rated match completion applies rating updates", () => {
   const beforeA = getRatingProfile(userA);
   const beforeB = getRatingProfile(userB);
 
-  const completed = completeMatch({
-    matchId: ticketB.matchId,
-    actorUserId: userA,
-    outcome: "win",
-  });
+  const completed = settleMatchResult(ticketB.matchId, "a_win");
 
   assertEquals(completed.ok, true);
   if (completed.ok) {

@@ -40,7 +40,8 @@ export type TerminalReason =
   | "four_in_a_row"
   | "timeout"
   | "no_legal_moves"
-  | "ply_cap";
+  | "ply_cap"
+  | "resign";
 
 export type TerminalState = {
   winner: Player | null;

@@ -23,21 +23,28 @@ export type MatchRecord = {
   userBId: string;
   rated: boolean;
   timeControlId: string;
+  gameId: string | null;
   createdAt: number;
   completedAt: number | null;
   result: MatchResult | null;
   ratingUpdate: RatingUpdateResult | null;
 };
 
-export type CompleteMatchInput = {
-  matchId: string;
-  actorUserId: string;
-  outcome: "win" | "loss" | "draw";
-};
-
-export type CompleteMatchResult =
-  | { ok: false; code: "not_found" | "forbidden" | "already_completed" }
+export type SettleMatchResult =
+  | { ok: false; code: "not_found" | "already_completed" }
   | { ok: true; match: MatchRecord };
+
+/**
+ * Hook invoked synchronously when a match is created, used by lib/games.ts to
+ * spin up a server-authoritative game session. Returns the new game id.
+ */
+export type MatchCreatedHook = (match: MatchRecord) => string | null;
+
+let matchCreatedHook: MatchCreatedHook | null = null;
+
+export function registerMatchCreatedHook(hook: MatchCreatedHook) {
+  matchCreatedHook = hook;
+}
 
 type QueueState = {
   byUser: Map<string, QueueTicket>;
@@ -87,7 +94,9 @@ function maybeMatch(key: QueueKey) {
   const secondUser = waiting[1];
   const first = state.byUser.get(firstUser);
   const second = state.byUser.get(secondUser);
-  if (!first || !second || first.status !== "queued" || second.status !== "queued") {
+  if (
+    !first || !second || first.status !== "queued" || second.status !== "queued"
+  ) {
     upsertWaiting(key, waiting.slice(2));
     return;
   }
@@ -101,11 +110,21 @@ function maybeMatch(key: QueueKey) {
     userBId: secondUser,
     rated: first.rated,
     timeControlId: first.timeControlId,
+    gameId: null,
     createdAt: ts,
     completedAt: null,
     result: null,
     ratingUpdate: null,
   });
+
+  const match = state.matches.get(matchId)!;
+  if (matchCreatedHook) {
+    try {
+      match.gameId = matchCreatedHook({ ...match });
+    } catch (err) {
+      console.error("match_created_hook_failed", err);
+    }
+  }
 
   first.status = "matched";
   first.matchId = matchId;
@@ -174,33 +193,29 @@ export function getMatchById(matchId: string): MatchRecord | null {
   return { ...match };
 }
 
-export function completeMatch(input: CompleteMatchInput): CompleteMatchResult {
-  const match = state.matches.get(input.matchId);
+/**
+ * Server-authoritative settlement of a match. Called by the game session
+ * layer (lib/games.ts) once the game reaches a terminal state — never from
+ * client-reported outcomes.
+ */
+export function settleMatchResult(
+  matchId: string,
+  result: MatchResult,
+): SettleMatchResult {
+  const match = state.matches.get(matchId);
   if (!match) {
     return { ok: false, code: "not_found" };
-  }
-
-  if (input.actorUserId !== match.userAId && input.actorUserId !== match.userBId) {
-    return { ok: false, code: "forbidden" };
   }
 
   if (match.completedAt !== null) {
     return { ok: false, code: "already_completed" };
   }
 
-  const actorIsA = input.actorUserId === match.userAId;
-  let result: MatchResult;
-  if (input.outcome === "draw") {
-    result = "draw";
-  } else if ((input.outcome === "win" && actorIsA) || (input.outcome === "loss" && !actorIsA)) {
-    result = "a_win";
-  } else {
-    result = "b_win";
-  }
-
   let ratingUpdate: RatingUpdateResult | null = null;
   if (match.rated) {
-    const outcomeForA = result === "draw" ? "draw" : (result === "a_win" ? "win" : "loss");
+    const outcomeForA = result === "draw"
+      ? "draw"
+      : (result === "a_win" ? "win" : "loss");
     ratingUpdate = applyRatedOutcome(match.userAId, match.userBId, outcomeForA);
   }
 

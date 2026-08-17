@@ -5,7 +5,9 @@ type MenuButtonProps = {
   disabled?: boolean;
 };
 
-function MenuButton({ href, label, description, disabled = false }: MenuButtonProps) {
+function MenuButton(
+  { href, label, description, disabled = false }: MenuButtonProps,
+) {
   if (disabled) {
     return (
       <button
@@ -51,7 +53,7 @@ export default function HomeMenu() {
       <MenuButton
         href="/l/new"
         label="Create Lobby"
-        description="Open the lobby creation flow (scaffold route)."
+        description="Create a private or public room and share the code with a friend."
       />
     </section>
   );
