@@ -51,6 +51,11 @@ export default function HomeMenu() {
         description="Join the rated queue flow (scaffold route)."
       />
       <MenuButton
+        href="/ai"
+        label="Play vs AI"
+        description="Practice against the computer with five difficulty levels."
+      />
+      <MenuButton
         href="/l/new"
         label="Create Lobby"
         description="Create a private or public room and share the code with a friend."

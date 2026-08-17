@@ -5,6 +5,7 @@
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
+import * as $ai from "./routes/ai.tsx";
 import * as $api_auth_callback from "./routes/api/auth/callback.ts";
 import * as $api_auth_guest from "./routes/api/auth/guest.ts";
 import * as $api_auth_login from "./routes/api/auth/login.ts";
@@ -22,7 +23,6 @@ import * as $api_lobbies_code_join from "./routes/api/lobbies/[code]/join.ts";
 import * as $api_lobbies_code_leave from "./routes/api/lobbies/[code]/leave.ts";
 import * as $api_lobbies_code_ready from "./routes/api/lobbies/[code]/ready.ts";
 import * as $api_lobbies_code_start from "./routes/api/lobbies/[code]/start.ts";
-import * as $api_lobbies_shared from "./routes/api/lobbies/_shared.ts";
 import * as $api_lobbies_index from "./routes/api/lobbies/index.ts";
 import * as $api_matchmaking_cancel from "./routes/api/matchmaking/cancel.ts";
 import * as $api_matchmaking_enqueue from "./routes/api/matchmaking/enqueue.ts";
@@ -36,6 +36,7 @@ import * as $local from "./routes/local.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $queue from "./routes/queue.tsx";
 import * as $signup from "./routes/signup.tsx";
+import * as $AiGame from "./islands/AiGame.tsx";
 import * as $AuthForm from "./islands/AuthForm.tsx";
 import * as $Board from "./islands/Board.tsx";
 import * as $GameManager from "./islands/GameManager.tsx";
@@ -52,6 +53,7 @@ const manifest = {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
+    "./routes/ai.tsx": $ai,
     "./routes/api/auth/callback.ts": $api_auth_callback,
     "./routes/api/auth/guest.ts": $api_auth_guest,
     "./routes/api/auth/login.ts": $api_auth_login,
@@ -69,7 +71,6 @@ const manifest = {
     "./routes/api/lobbies/[code]/leave.ts": $api_lobbies_code_leave,
     "./routes/api/lobbies/[code]/ready.ts": $api_lobbies_code_ready,
     "./routes/api/lobbies/[code]/start.ts": $api_lobbies_code_start,
-    "./routes/api/lobbies/_shared.ts": $api_lobbies_shared,
     "./routes/api/lobbies/index.ts": $api_lobbies_index,
     "./routes/api/matchmaking/cancel.ts": $api_matchmaking_cancel,
     "./routes/api/matchmaking/enqueue.ts": $api_matchmaking_enqueue,
@@ -85,6 +86,7 @@ const manifest = {
     "./routes/signup.tsx": $signup,
   },
   islands: {
+    "./islands/AiGame.tsx": $AiGame,
     "./islands/AuthForm.tsx": $AuthForm,
     "./islands/Board.tsx": $Board,
     "./islands/GameManager.tsx": $GameManager,
