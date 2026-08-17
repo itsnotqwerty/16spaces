@@ -4,7 +4,11 @@
 /// <reference lib="dom.asynciterable" />
 /// <reference lib="deno.ns" />
 
-import "$std/dotenv/load.ts";
+try {
+	await import("$std/dotenv/load.ts");
+} catch {
+	// Ignore unreadable or missing .env files in production; systemd provides env vars.
+}
 
 import { start } from "$fresh/server.ts";
 import manifest from "./fresh.gen.ts";

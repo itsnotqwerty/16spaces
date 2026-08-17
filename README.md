@@ -100,7 +100,7 @@ Deployment scaffolding lives in [deploy/](deploy/): nginx example config, system
 Example:
 
 ```bash
-sudo ./deploy/install.sh -d /opt/16spaces -n 16space.example.com -p 8000 -e /opt/16spaces/.env
+sudo ./deploy/install.sh -n 16space.example.com -p 8000 -e .env
 ```
 
 ## License

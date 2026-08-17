@@ -7,7 +7,7 @@ usage() {
 Usage: sudo ./deploy/install.sh [options]
 
 Options:
-  -d, --dir PATH        Project directory (default: /opt/16spaces)
+  -d, --dir PATH        Project directory (default: repo root, one level above deploy/)
   -n, --domain NAME     Nginx server_name (default: 16space.example.com)
   -p, --port PORT       App port (default: 8000)
   -u, --user USER       System user for the service (default: 16spaces)
@@ -16,12 +16,12 @@ Options:
 EOF
 }
 
-project_dir="/opt/16spaces"
 server_name="16space.example.com"
 port="8000"
 app_user="16spaces"
 env_source=""
 skip_env_copy="false"
+project_dir=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -67,8 +67,13 @@ if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "${script_dir}/.." && pwd)"
 nginx_template="${script_dir}/nginx.example.conf"
 service_template="${script_dir}/16spaces.service"
+
+if [[ -z "$project_dir" ]]; then
+  project_dir="$repo_root"
+fi
 
 if [[ ! -d "$project_dir" ]]; then
   echo "Project directory not found: $project_dir" >&2
