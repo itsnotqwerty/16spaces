@@ -13,6 +13,10 @@ import * as $api_auth_magic from "./routes/api/auth/magic.ts";
 import * as $api_auth_session from "./routes/api/auth/session.ts";
 import * as $api_auth_signup from "./routes/api/auth/signup.ts";
 import * as $api_health from "./routes/api/health.ts";
+import * as $api_matchmaking_cancel from "./routes/api/matchmaking/cancel.ts";
+import * as $api_matchmaking_complete from "./routes/api/matchmaking/complete.ts";
+import * as $api_matchmaking_enqueue from "./routes/api/matchmaking/enqueue.ts";
+import * as $api_matchmaking_status from "./routes/api/matchmaking/status.ts";
 import * as $index from "./routes/index.tsx";
 import * as $l_new from "./routes/l/new.tsx";
 import * as $leaderboard from "./routes/leaderboard.tsx";
@@ -24,6 +28,7 @@ import * as $AuthForm from "./islands/AuthForm.tsx";
 import * as $Board from "./islands/Board.tsx";
 import * as $GameManager from "./islands/GameManager.tsx";
 import * as $HomeMenu from "./islands/HomeMenu.tsx";
+import * as $QueueWait from "./islands/QueueWait.tsx";
 import * as $Sidebar from "./islands/Sidebar.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -40,6 +45,10 @@ const manifest = {
     "./routes/api/auth/session.ts": $api_auth_session,
     "./routes/api/auth/signup.ts": $api_auth_signup,
     "./routes/api/health.ts": $api_health,
+    "./routes/api/matchmaking/cancel.ts": $api_matchmaking_cancel,
+    "./routes/api/matchmaking/complete.ts": $api_matchmaking_complete,
+    "./routes/api/matchmaking/enqueue.ts": $api_matchmaking_enqueue,
+    "./routes/api/matchmaking/status.ts": $api_matchmaking_status,
     "./routes/index.tsx": $index,
     "./routes/l/new.tsx": $l_new,
     "./routes/leaderboard.tsx": $leaderboard,
@@ -53,6 +62,7 @@ const manifest = {
     "./islands/Board.tsx": $Board,
     "./islands/GameManager.tsx": $GameManager,
     "./islands/HomeMenu.tsx": $HomeMenu,
+    "./islands/QueueWait.tsx": $QueueWait,
     "./islands/Sidebar.tsx": $Sidebar,
   },
   baseUrl: import.meta.url,

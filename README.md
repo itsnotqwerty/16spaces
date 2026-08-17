@@ -97,11 +97,21 @@ Current transitional routes:
 - `/queue` and `/l/new` queue/lobby scaffold pages
 
 Deployment scaffolding lives in [deploy/](deploy/): nginx example config, systemd unit example, and an install script.
+The nginx template now serves HTTPS on `443` and redirects `80` to `https://`.
 Example:
 
 ```bash
 sudo ./deploy/install.sh -n 16space.example.com -p 8000 -e .env
 ```
+
+Default cert paths are Let’s Encrypt style:
+
+- `/etc/letsencrypt/live/<domain>/fullchain.pem`
+- `/etc/letsencrypt/live/<domain>/privkey.pem`
+
+Override them with `--cert` and `--key` if you use a different certificate layout.
+
+The installer will try to install nginx if it is missing, and it will bump the app port upward if the requested port is already in use.
 
 ## License
 

@@ -1,5 +1,9 @@
 import { assertEquals } from "$std/assert/mod.ts";
-import { normalizeUsername, validateUsername } from "./username.ts";
+import {
+  isPlaceholderUsername,
+  normalizeUsername,
+  validateUsername,
+} from "./username.ts";
 
 Deno.test("validateUsername accepts valid usernames", () => {
   assertEquals(validateUsername("Sam_123"), null);
@@ -18,4 +22,12 @@ Deno.test("validateUsername rejects reserved names", () => {
 
 Deno.test("normalizeUsername trims whitespace", () => {
   assertEquals(normalizeUsername("  Sam_123  "), "Sam_123");
+});
+
+Deno.test("isPlaceholderUsername identifies generated usernames", () => {
+  assertEquals(isPlaceholderUsername("user_a1b2c3d4"), true);
+});
+
+Deno.test("isPlaceholderUsername rejects normal usernames", () => {
+  assertEquals(isPlaceholderUsername("Sam_123"), false);
 });

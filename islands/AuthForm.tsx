@@ -16,6 +16,22 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/signup";
 
+  async function finalizeSession(messageText: string) {
+    const sessionResponse = await fetch("/api/auth/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    const sessionData = await sessionResponse.json();
+
+    if (sessionResponse.ok && sessionData?.isAuthenticated) {
+      // Force a server-rendered refresh so middleware-backed auth state appears immediately.
+      window.location.assign("/");
+      return;
+    }
+
+    setMessage(`${messageText} Session cookie set, but not visible yet. Refresh once.`);
+  }
+
   async function submitAuth() {
     setIsSubmitting(true);
     setMessage(null);
@@ -33,7 +49,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       if (!response.ok) {
         setMessage(data.error ?? "Request failed");
       } else {
-        setMessage(mode === "login" ? "Signed in." : "Account created.");
+        await finalizeSession(mode === "login" ? "Signed in." : "Account created.");
       }
     } catch {
       setMessage("Request failed.");
@@ -75,7 +91,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       if (!response.ok) {
         setMessage(data.error ?? "Guest sign-in failed.");
       } else {
-        setMessage("Guest session started.");
+        await finalizeSession("Guest session started.");
       }
     } catch {
       setMessage("Guest sign-in failed.");

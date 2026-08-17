@@ -1,4 +1,5 @@
 const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/;
+const PLACEHOLDER_USERNAME_REGEX = /^user_[a-f0-9]{8}$/i;
 
 const RESERVED_USERNAMES = new Set([
   "admin",
@@ -34,4 +35,12 @@ export function validateUsername(username: string): string | null {
 
 export function normalizeUsername(username: string): string {
   return username.trim();
+}
+
+export function isPlaceholderUsername(username: string | null | undefined): boolean {
+  if (!username) {
+    return true;
+  }
+
+  return PLACEHOLDER_USERNAME_REGEX.test(username.trim());
 }

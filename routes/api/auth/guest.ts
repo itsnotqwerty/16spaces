@@ -1,17 +1,9 @@
 import { Handlers } from "$fresh/server.ts";
 import { setAuthCookies } from "../../../lib/auth_cookies.ts";
-import { flag } from "../../../lib/flags.ts";
 import { supabaseAnon } from "../../../lib/supabase.ts";
 
 export const handler: Handlers = {
   async POST() {
-    if (!flag("FEATURE_AUTH")) {
-      return Response.json(
-        { error: "feature_disabled", code: "feature_auth_disabled" },
-        { status: 503 },
-      );
-    }
-
     const { data, error } = await supabaseAnon().auth.signInAnonymously();
 
     if (error || !data.session || !data.user) {
