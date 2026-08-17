@@ -23,6 +23,7 @@ import * as $api_lobbies_code_join from "./routes/api/lobbies/[code]/join.ts";
 import * as $api_lobbies_code_leave from "./routes/api/lobbies/[code]/leave.ts";
 import * as $api_lobbies_code_ready from "./routes/api/lobbies/[code]/ready.ts";
 import * as $api_lobbies_code_start from "./routes/api/lobbies/[code]/start.ts";
+import * as $api_lobbies_shared from "./routes/api/lobbies/_shared.ts";
 import * as $api_lobbies_index from "./routes/api/lobbies/index.ts";
 import * as $api_matchmaking_cancel from "./routes/api/matchmaking/cancel.ts";
 import * as $api_matchmaking_enqueue from "./routes/api/matchmaking/enqueue.ts";
@@ -72,6 +73,7 @@ const manifest = {
     "./routes/api/lobbies/[code]/leave.ts": $api_lobbies_code_leave,
     "./routes/api/lobbies/[code]/ready.ts": $api_lobbies_code_ready,
     "./routes/api/lobbies/[code]/start.ts": $api_lobbies_code_start,
+    "./routes/api/lobbies/_shared.ts": $api_lobbies_shared,
     "./routes/api/lobbies/index.ts": $api_lobbies_index,
     "./routes/api/matchmaking/cancel.ts": $api_matchmaking_cancel,
     "./routes/api/matchmaking/enqueue.ts": $api_matchmaking_enqueue,

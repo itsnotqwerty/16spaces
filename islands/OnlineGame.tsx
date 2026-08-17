@@ -217,7 +217,7 @@ export default function OnlineGame({ gameId }: { gameId: string }) {
   })();
 
   return (
-    <div class="w-full">
+    <div class="w-full min-w-0 sm:min-w-[34rem]">
       <div class="mb-3 text-gray-300 flex flex-wrap items-center gap-3">
         <span>
           You are playing as <strong class="text-white">{yourPlayer}</strong>
