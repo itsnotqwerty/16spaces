@@ -40,6 +40,7 @@ import * as $signup from "./routes/signup.tsx";
 import * as $AiGame from "./islands/AiGame.tsx";
 import * as $AuthForm from "./islands/AuthForm.tsx";
 import * as $Board from "./islands/Board.tsx";
+import * as $Dropdown from "./islands/Dropdown.tsx";
 import * as $GameManager from "./islands/GameManager.tsx";
 import * as $HomeMenu from "./islands/HomeMenu.tsx";
 import * as $LobbyCreate from "./islands/LobbyCreate.tsx";
@@ -48,6 +49,7 @@ import * as $LogoutButton from "./islands/LogoutButton.tsx";
 import * as $OnlineGame from "./islands/OnlineGame.tsx";
 import * as $QueueWait from "./islands/QueueWait.tsx";
 import * as $Sidebar from "./islands/Sidebar.tsx";
+import * as $TimeControlPicker from "./islands/TimeControlPicker.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -92,6 +94,7 @@ const manifest = {
     "./islands/AiGame.tsx": $AiGame,
     "./islands/AuthForm.tsx": $AuthForm,
     "./islands/Board.tsx": $Board,
+    "./islands/Dropdown.tsx": $Dropdown,
     "./islands/GameManager.tsx": $GameManager,
     "./islands/HomeMenu.tsx": $HomeMenu,
     "./islands/LobbyCreate.tsx": $LobbyCreate,
@@ -100,6 +103,7 @@ const manifest = {
     "./islands/OnlineGame.tsx": $OnlineGame,
     "./islands/QueueWait.tsx": $QueueWait,
     "./islands/Sidebar.tsx": $Sidebar,
+    "./islands/TimeControlPicker.tsx": $TimeControlPicker,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

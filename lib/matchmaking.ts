@@ -7,13 +7,14 @@ export type QueueTicket = {
   userId: string;
   rated: boolean;
   timeControlId: string;
+  boardSize: number;
   status: QueueStatus;
   matchId: string | null;
   createdAt: number;
   updatedAt: number;
 };
 
-type QueueKey = `${0 | 1}:${string}`;
+type QueueKey = `${0 | 1}:${string}:${number}`;
 
 export type MatchResult = "a_win" | "b_win" | "draw";
 
@@ -23,6 +24,7 @@ export type MatchRecord = {
   userBId: string;
   rated: boolean;
   timeControlId: string;
+  boardSize: number;
   gameId: string | null;
   createdAt: number;
   completedAt: number | null;
@@ -58,8 +60,12 @@ const state: QueueState = {
   matches: new Map(),
 };
 
-function queueKey(rated: boolean, timeControlId: string): QueueKey {
-  return `${rated ? 1 : 0}:${timeControlId}`;
+function queueKey(
+  rated: boolean,
+  timeControlId: string,
+  boardSize: number,
+): QueueKey {
+  return `${rated ? 1 : 0}:${timeControlId}:${boardSize}`;
 }
 
 function now(): number {
@@ -110,6 +116,7 @@ function maybeMatch(key: QueueKey) {
     userBId: secondUser,
     rated: first.rated,
     timeControlId: first.timeControlId,
+    boardSize: first.boardSize,
     gameId: null,
     createdAt: ts,
     completedAt: null,
@@ -140,6 +147,7 @@ export function enqueueUser(
   userId: string,
   rated: boolean,
   timeControlId: string,
+  boardSize: number = 4,
 ): QueueTicket {
   const existing = state.byUser.get(userId);
   if (existing) {
@@ -147,7 +155,8 @@ export function enqueueUser(
     if (
       existing.status === "queued" &&
       existing.rated === rated &&
-      existing.timeControlId === timeControlId
+      existing.timeControlId === timeControlId &&
+      existing.boardSize === boardSize
     ) {
       return { ...existing };
     }
@@ -161,6 +170,7 @@ export function enqueueUser(
     userId,
     rated,
     timeControlId,
+    boardSize,
     status: "queued",
     matchId: null,
     createdAt: now(),
@@ -169,7 +179,7 @@ export function enqueueUser(
 
   state.byUser.set(userId, ticket);
 
-  const key = queueKey(rated, timeControlId);
+  const key = queueKey(rated, timeControlId, boardSize);
   const waiting = state.waitingByKey.get(key) ?? [];
   upsertWaiting(key, [...waiting, userId]);
   maybeMatch(key);

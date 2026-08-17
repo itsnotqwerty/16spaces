@@ -1,4 +1,4 @@
-import { BOARD_SIZE, cloneBoard } from "./board.ts";
+import { boardSize, cloneBoard } from "./board.ts";
 import { checkWin, legalMoves } from "./rules.ts";
 import type { Board, Move, Player } from "./types.ts";
 
@@ -37,21 +37,23 @@ function applyMove(board: Board, player: Player, move: Move): Board {
   return next;
 }
 
-/** Counts contiguous runs of 3 stones (an open threat to complete 4). */
+/** Counts contiguous runs of (size-1) stones — an open threat to complete a line. */
 function threats(board: Board, player: Player): number {
+  const size = boardSize(board);
+  const run = size - 1;
   let count = 0;
-  for (let x = 0; x < BOARD_SIZE; x++) {
-    for (let y = 0; y < BOARD_SIZE; y++) {
+  for (let x = 0; x < size; x++) {
+    for (let y = 0; y < size; y++) {
       for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]] as const) {
-        let run = 0;
-        for (let i = 0; i < 3; i++) {
+        let streak = 0;
+        for (let i = 0; i < run; i++) {
           const cx = x + dx * i;
           const cy = y + dy * i;
-          if (cx < 0 || cy < 0 || cx >= BOARD_SIZE || cy >= BOARD_SIZE) break;
+          if (cx < 0 || cy < 0 || cx >= size || cy >= size) break;
           if (board[cx][cy] !== player) break;
-          run++;
+          streak++;
         }
-        if (run === 3) count++;
+        if (streak === run) count++;
       }
     }
   }

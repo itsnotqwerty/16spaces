@@ -1,9 +1,9 @@
 import {
-  BOARD_SIZE,
+  boardSize,
   cloneBoard,
   countStones,
   isInBounds,
-  STONE_CAP,
+  stoneCap,
 } from "./board.ts";
 import { afterLegalMove, flaggedPlayer } from "./clock.ts";
 import { moveToNotation } from "./notation.ts";
@@ -30,16 +30,17 @@ export function isAdjacent(from: Coord, to: Coord): boolean {
 export function checkWin(
   board: Board,
 ): { winner: Player; line: [number, number][] } | null {
+  const size = boardSize(board);
   const lines: [number, number][][] = [];
 
-  for (let i = 0; i < BOARD_SIZE; i++) {
-    lines.push(Array.from({ length: BOARD_SIZE }, (_, y) => [i, y]));
-    lines.push(Array.from({ length: BOARD_SIZE }, (_, x) => [x, i]));
+  for (let i = 0; i < size; i++) {
+    lines.push(Array.from({ length: size }, (_, y) => [i, y]));
+    lines.push(Array.from({ length: size }, (_, x) => [x, i]));
   }
 
-  lines.push(Array.from({ length: BOARD_SIZE }, (_, i) => [i, i]));
+  lines.push(Array.from({ length: size }, (_, i) => [i, i]));
   lines.push(
-    Array.from({ length: BOARD_SIZE }, (_, i) => [i, BOARD_SIZE - 1 - i]),
+    Array.from({ length: size }, (_, i) => [i, size - 1 - i]),
   );
 
   for (const line of lines) {
@@ -56,8 +57,9 @@ export function checkWin(
 }
 
 function canPlace(board: Board, player: Player, to: Coord): boolean {
-  return isInBounds(to.x, to.y) && board[to.x][to.y] === null &&
-    countStones(board, player) < STONE_CAP;
+  const size = boardSize(board);
+  return isInBounds(to.x, to.y, size) && board[to.x][to.y] === null &&
+    countStones(board, player) < stoneCap(size);
 }
 
 function canSlide(
@@ -66,8 +68,9 @@ function canSlide(
   from: Coord,
   to: Coord,
 ): boolean {
-  return isInBounds(from.x, from.y) &&
-    isInBounds(to.x, to.y) &&
+  const size = boardSize(board);
+  return isInBounds(from.x, from.y, size) &&
+    isInBounds(to.x, to.y, size) &&
     board[from.x][from.y] === player &&
     board[to.x][to.y] === null &&
     isAdjacent(from, to);
@@ -100,11 +103,12 @@ function applyBoardMove(
 
 export function legalMoves(board: Board, player: Player): Move[] {
   const moves: Move[] = [];
+  const size = boardSize(board);
   const stones = countStones(board, player);
 
-  for (let x = 0; x < BOARD_SIZE; x++) {
-    for (let y = 0; y < BOARD_SIZE; y++) {
-      if (stones < STONE_CAP && board[x][y] === null) {
+  for (let x = 0; x < size; x++) {
+    for (let y = 0; y < size; y++) {
+      if (stones < stoneCap(size) && board[x][y] === null) {
         moves.push({ kind: "place", to: { x, y } });
       }
 

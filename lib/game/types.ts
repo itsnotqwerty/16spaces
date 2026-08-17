@@ -50,6 +50,8 @@ export type TerminalState = {
 
 export type GameSnapshot = {
   board: Board;
+  /** Board dimension N (board is N×N); matches board.length. */
+  size: number;
   toMove: Player;
   ply: number;
   clock: ClockState;

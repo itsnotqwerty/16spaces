@@ -61,12 +61,23 @@ export default function Board(props: BoardProps) {
     setRulesShowing(!rulesShowing);
   };
 
+  const size = props.board.length;
+  const gridCols = `2rem repeat(${size}, minmax(0, 1fr))`;
+  const gridRows = `repeat(${size}, minmax(0, 1fr))`;
+  const labels = Array.from(
+    { length: size },
+    (_, i) => String.fromCharCode(65 + i),
+  );
+
   return (
-    <div class="my-2 w-full max-w-[34rem] mr-0 sm:mr-4">
+    <div class="my-2 w-full flex-1 max-w-[34rem] mr-0 sm:mr-4">
       {/* Top labels */}
-      <div class="grid grid-cols-[2rem_repeat(4,minmax(0,1fr))] sm:grid-cols-[2.25rem_repeat(4,minmax(0,1fr))] gap-1 mb-2">
+      <div
+        class="grid gap-1 mb-2"
+        style={{ gridTemplateColumns: gridCols }}
+      >
         <div></div> {/* Empty corner */}
-        {["A", "B", "C", "D"].map((label) => (
+        {labels.map((label) => (
           <div
             key={label}
             class="text-center text-xl sm:text-2xl text-white font-bold"
@@ -76,11 +87,12 @@ export default function Board(props: BoardProps) {
         ))}
       </div>
       {/* Board with side labels */}
-      <div class="grid grid-rows-4 gap-1">
+      <div class="grid gap-1" style={{ gridTemplateRows: gridRows }}>
         {props.board.map((row, x) => (
           <div
             key={x}
-            class="grid grid-cols-[2rem_repeat(4,minmax(0,1fr))] sm:grid-cols-[2.25rem_repeat(4,minmax(0,1fr))] gap-1"
+            class="grid gap-1"
+            style={{ gridTemplateColumns: gridCols }}
           >
             <div class="flex items-center justify-center text-xl sm:text-2xl text-white font-bold">
               {x + 1}

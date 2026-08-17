@@ -16,6 +16,7 @@ function createSnapshot(): GameSnapshot {
   const control = TIME_CONTROLS[DEFAULT_TIME_CONTROL_ID];
   return {
     board: emptyBoard(),
+    size: emptyBoard().length,
     toMove: "X",
     ply: 0,
     clock: {

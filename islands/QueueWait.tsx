@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
+import {
+  DEFAULT_BOARD_SIZE,
+  DEFAULT_TIME_CONTROL_ID,
+  MAX_BOARD_SIZE,
+  MIN_BOARD_SIZE,
+  stoneCap,
+} from "../lib/game/index.ts";
+import Dropdown from "./Dropdown.tsx";
+import TimeControlPicker from "./TimeControlPicker.tsx";
 
 type QueueTicket = {
   ticketId: string;
   rated: boolean;
   timeControlId: string;
+  boardSize: number;
   status: "idle" | "queued" | "matched";
   matchId: string | null;
   createdAt: number;
@@ -35,7 +45,8 @@ type QueueStatusResponse = {
 };
 
 export default function QueueWait() {
-  const [timeControlId, setTimeControlId] = useState("classic");
+  const [timeControlId, setTimeControlId] = useState(DEFAULT_TIME_CONTROL_ID);
+  const [boardSize, setBoardSize] = useState(DEFAULT_BOARD_SIZE);
   const [rated, setRated] = useState(false);
   const [ratedEligible, setRatedEligible] = useState(true);
   const [status, setStatus] = useState<QueueStatusResponse["status"]>("idle");
@@ -78,7 +89,7 @@ export default function QueueWait() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ rated, timeControlId }),
+        body: JSON.stringify({ rated, timeControlId, boardSize }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -169,38 +180,56 @@ export default function QueueWait() {
 
   return (
     <div class="rounded border border-white/10 bg-white/5 p-4 space-y-4">
-      <div class="grid gap-3 sm:grid-cols-2">
-        <label class="space-y-1">
-          <span class="block text-xs text-gray-300">Time control</span>
-          <select
+      <div class="grid gap-3 sm:grid-cols-3">
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Time
+          </span>
+          <TimeControlPicker
             value={timeControlId}
-            onChange={(e) =>
-              setTimeControlId((e.currentTarget as HTMLSelectElement).value)}
-            disabled={status === "queued" || submitting}
-            class="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white"
-          >
-            <option value="classic">Classic 2:30</option>
-            <option value="3+0">3+0</option>
-            <option value="3+2">3+2</option>
-            <option value="5+0">5+0</option>
-          </select>
-        </label>
+            onChange={setTimeControlId}
+            showLabel={false}
+            selectClass="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white text-sm"
+          />
+        </div>
 
-        <label class="space-y-1">
-          <span class="block text-xs text-gray-300">Mode</span>
-          <select
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Board
+          </span>
+          <Dropdown
+            id="queue-board-size"
+            value={String(boardSize)}
+            options={Array.from(
+              { length: MAX_BOARD_SIZE - MIN_BOARD_SIZE + 1 },
+              (_, i) => MIN_BOARD_SIZE + i,
+            ).map((size) => ({
+              value: String(size),
+              label: `${size}×${size} · ${stoneCap(size)} stones`,
+            }))}
+            onChange={(v) => setBoardSize(Number(v))}
+            class="w-full text-sm"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Mode
+          </span>
+          <Dropdown
+            id="queue-mode"
             value={rated ? "rated" : "unrated"}
-            onChange={(e) =>
-              setRated(
-                (e.currentTarget as HTMLSelectElement).value === "rated",
-              )}
-            disabled={status === "queued" || submitting}
-            class="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white"
-          >
-            <option value="unrated">Unrated</option>
-            <option value="rated" disabled={!ratedEligible}>Rated</option>
-          </select>
-        </label>
+            options={[
+              { value: "unrated", label: "Unrated" },
+              {
+                value: "rated",
+                label: ratedEligible ? "Rated" : "Rated (sign in)",
+              },
+            ]}
+            onChange={(v) => setRated(v === "rated")}
+            class="w-full text-sm"
+          />
+        </div>
       </div>
 
       {!ratedEligible && (

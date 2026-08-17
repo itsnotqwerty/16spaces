@@ -1,4 +1,10 @@
 import { Handlers } from "$fresh/server.ts";
+import {
+  MAX_BOARD_SIZE,
+  MIN_BOARD_SIZE,
+  parseCustomTimeControl,
+  TIME_CONTROLS,
+} from "../../../lib/game/index.ts";
 import { enqueueUser } from "../../../lib/matchmaking.ts";
 import { flag } from "../../../lib/flags.ts";
 import { isPlaceholderUsername } from "../../../lib/username.ts";
@@ -7,7 +13,18 @@ import type { AppState } from "../../_middleware.ts";
 type EnqueueRequest = {
   rated?: boolean;
   timeControlId?: string;
+  boardSize?: number;
 };
+
+function isValidTimeControlId(id: string): boolean {
+  if (TIME_CONTROLS[id]) {
+    return true;
+  }
+  if (id.startsWith("custom:")) {
+    return parseCustomTimeControl(id.slice("custom:".length)) !== null;
+  }
+  return false;
+}
 
 export const handler: Handlers<unknown, AppState> = {
   async POST(req, ctx) {
@@ -61,12 +78,31 @@ export const handler: Handlers<unknown, AppState> = {
       );
     }
 
-    const timeControlId =
-      typeof body.timeControlId === "string" && body.timeControlId.trim().length > 0
-        ? body.timeControlId.trim()
-        : "classic";
+    const timeControlId = typeof body.timeControlId === "string" &&
+        body.timeControlId.trim().length > 0
+      ? body.timeControlId.trim()
+      : "classic";
 
-    const ticket = enqueueUser(user.id, rated, timeControlId);
+    if (!isValidTimeControlId(timeControlId)) {
+      return Response.json(
+        { error: "invalid_request", code: "invalid_time_control" },
+        { status: 400 },
+      );
+    }
+
+    const boardSize = typeof body.boardSize === "number"
+      ? Math.floor(body.boardSize)
+      : 4;
+    if (
+      boardSize < MIN_BOARD_SIZE || boardSize > MAX_BOARD_SIZE
+    ) {
+      return Response.json(
+        { error: "invalid_request", code: "invalid_board_size" },
+        { status: 400 },
+      );
+    }
+
+    const ticket = enqueueUser(user.id, rated, timeControlId, boardSize);
     return Response.json({ ok: true, ticket });
   },
 };

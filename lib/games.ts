@@ -1,12 +1,12 @@
 import {
   applyLocalMove,
-  DEFAULT_TIME_CONTROL_ID,
+  DEFAULT_BOARD_SIZE,
   emptyBoard,
   type GameSnapshot,
   type Move,
   type Player,
   resolveFlagFall,
-  TIME_CONTROLS,
+  resolveTimeControl,
 } from "./game/index.ts";
 import {
   type MatchRecord,
@@ -60,12 +60,15 @@ function createId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replaceAll("-", "")}`;
 }
 
-function initialSnapshot(timeControlId: string): GameSnapshot {
-  const control = TIME_CONTROLS[timeControlId] ??
-    TIME_CONTROLS[DEFAULT_TIME_CONTROL_ID];
+function initialSnapshot(
+  timeControlId: string,
+  boardSize: number = DEFAULT_BOARD_SIZE,
+): GameSnapshot {
+  const control = resolveTimeControl(timeControlId);
 
   return {
-    board: emptyBoard(),
+    board: emptyBoard(boardSize),
+    size: boardSize,
     toMove: "X",
     ply: 0,
     clock: {
@@ -165,6 +168,7 @@ export type CreateGameInput = {
   matchId: string | null;
   rated: boolean;
   timeControlId: string;
+  boardSize?: number;
   playerXId: string;
   playerOId: string;
 };
@@ -178,7 +182,7 @@ export function createGameSession(input: CreateGameInput): string {
     timeControlId: input.timeControlId,
     playerXId: input.playerXId,
     playerOId: input.playerOId,
-    snapshot: initialSnapshot(input.timeControlId),
+    snapshot: initialSnapshot(input.timeControlId, input.boardSize),
     moves: [],
     createdAt: ts,
     updatedAt: ts,
@@ -198,6 +202,7 @@ export function createGameForMatch(match: MatchRecord): string {
     matchId: match.matchId,
     rated: match.rated,
     timeControlId: match.timeControlId,
+    boardSize: match.boardSize,
     playerXId: match.userAId,
     playerOId: match.userBId,
   });

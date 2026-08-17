@@ -6,16 +6,22 @@ import {
   applyLocalMove,
   checkWin,
   chooseAiMove,
+  DEFAULT_BOARD_SIZE,
   DEFAULT_TIME_CONTROL_ID,
   emptyBoard,
   type GameSnapshot,
+  MAX_BOARD_SIZE,
+  MIN_BOARD_SIZE,
   type Move,
   pickDelayMs,
   type Player,
   remainingMs,
   resolveFlagFall,
-  TIME_CONTROLS,
+  resolveTimeControl,
+  stoneCap,
 } from "../lib/game/index.ts";
+import TimeControlPicker from "./TimeControlPicker.tsx";
+import Dropdown from "./Dropdown.tsx";
 
 type Ploy = {
   index: number;
@@ -31,12 +37,15 @@ const DIFFICULTY_LABELS: Record<AiDifficulty, string> = {
   5: "5 — Perfect",
 };
 
-function createInitialSnapshot(timeControlId: string): GameSnapshot {
-  const control = TIME_CONTROLS[timeControlId] ??
-    TIME_CONTROLS[DEFAULT_TIME_CONTROL_ID];
+function createInitialSnapshot(
+  timeControlId: string,
+  size: number = DEFAULT_BOARD_SIZE,
+): GameSnapshot {
+  const control = resolveTimeControl(timeControlId);
 
   return {
-    board: emptyBoard(),
+    board: emptyBoard(size),
+    size,
     toMove: "X",
     ply: 0,
     clock: {
@@ -53,6 +62,7 @@ function createInitialSnapshot(timeControlId: string): GameSnapshot {
 export default function AiGame() {
   const [difficulty, setDifficulty] = useState<AiDifficulty>(3);
   const [timeControlId, setTimeControlId] = useState(DEFAULT_TIME_CONTROL_ID);
+  const [boardSize, setBoardSize] = useState(DEFAULT_BOARD_SIZE);
   const [game, setGame] = useState<GameSnapshot>(() =>
     createInitialSnapshot(DEFAULT_TIME_CONTROL_ID)
   );
@@ -152,12 +162,15 @@ export default function AiGame() {
     commitMove(move, humanPlayer);
   };
 
-  const handleReset = (nextTimeControlId = timeControlId) => {
+  const handleReset = (
+    nextTimeControlId = timeControlId,
+    nextSize = boardSize,
+  ) => {
     if (aiTimer.current) {
       clearTimeout(aiTimer.current);
       aiTimer.current = null;
     }
-    setGame(createInitialSnapshot(nextTimeControlId));
+    setGame(createInitialSnapshot(nextTimeControlId, nextSize));
     setPloys([]);
     setWinningLine(null);
     setAiThinking(false);
@@ -184,61 +197,72 @@ export default function AiGame() {
 
   return (
     <div class="w-full">
-      <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
-        <label class="text-sm text-gray-300" for="ai-difficulty-select">
-          AI difficulty
-        </label>
-        <select
-          id="ai-difficulty-select"
-          class="px-3 py-2 rounded bg-[#23211d] border border-white/20 text-white"
-          value={difficulty}
-          onChange={(e) => {
-            setDifficulty(
-              Number(
-                (e.currentTarget as HTMLSelectElement).value,
-              ) as AiDifficulty,
-            );
-            handleReset();
-          }}
-        >
-          {(Object.keys(DIFFICULTY_LABELS) as unknown as AiDifficulty[]).map((
-            level,
-          ) => (
-            <option key={level} value={level}>
-              {DIFFICULTY_LABELS[level]}
-            </option>
-          ))}
-        </select>
+      <div class="mb-4 grid gap-3 sm:grid-cols-3">
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Difficulty
+          </span>
+          <Dropdown
+            id="ai-difficulty-select"
+            value={String(difficulty)}
+            options={(
+              Object.keys(DIFFICULTY_LABELS) as unknown as AiDifficulty[]
+            ).map((level) => ({
+              value: String(level),
+              label: DIFFICULTY_LABELS[level],
+            }))}
+            onChange={(v) => {
+              setDifficulty(Number(v) as AiDifficulty);
+              handleReset();
+            }}
+            class="w-full text-sm"
+          />
+        </div>
 
-        <label
-          class="text-sm text-gray-300 sm:ml-4"
-          for="ai-time-control-select"
-        >
-          Time preset
-        </label>
-        <select
-          id="ai-time-control-select"
-          class="px-3 py-2 rounded bg-[#23211d] border border-white/20 text-white"
-          value={timeControlId}
-          onChange={(e) => {
-            const value = (e.currentTarget as HTMLSelectElement).value;
-            setTimeControlId(value);
-            handleReset(value);
-          }}
-        >
-          {Object.values(TIME_CONTROLS).map((control) => (
-            <option key={control.id} value={control.id}>
-              {control.label}
-            </option>
-          ))}
-        </select>
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Time
+          </span>
+          <TimeControlPicker
+            value={timeControlId}
+            onChange={(value) => {
+              setTimeControlId(value);
+              handleReset(value);
+            }}
+            showLabel={false}
+            selectClass="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white text-sm"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Board
+          </span>
+          <Dropdown
+            id="ai-board-size-select"
+            value={String(boardSize)}
+            options={Array.from(
+              { length: MAX_BOARD_SIZE - MIN_BOARD_SIZE + 1 },
+              (_, i) => MIN_BOARD_SIZE + i,
+            ).map((size) => ({
+              value: String(size),
+              label: `${size}×${size} · ${stoneCap(size)} stones`,
+            }))}
+            onChange={(v) => {
+              const size = Number(v);
+              setBoardSize(size);
+              handleReset(timeControlId, size);
+            }}
+            class="w-full text-sm"
+          />
+        </div>
 
         {aiThinking && !game.terminal && (
           <span class="text-sm text-amber-200 sm:ml-4">AI is thinking…</span>
         )}
       </div>
 
-      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4">
+      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4 w-full">
         <Board
           board={game.board}
           currentPlayer={game.toMove}

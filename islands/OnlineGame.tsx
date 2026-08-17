@@ -217,7 +217,7 @@ export default function OnlineGame({ gameId }: { gameId: string }) {
   })();
 
   return (
-    <div class="w-full min-w-0 sm:min-w-[34rem]">
+    <div class="w-full">
       <div class="mb-3 text-gray-300 flex flex-wrap items-center gap-3">
         <span>
           You are playing as <strong class="text-white">{yourPlayer}</strong>
@@ -239,7 +239,7 @@ export default function OnlineGame({ gameId }: { gameId: string }) {
         )}
       </div>
 
-      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4">
+      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4 w-full">
         <Board
           board={snapshot.board}
           currentPlayer={snapshot.toMove}

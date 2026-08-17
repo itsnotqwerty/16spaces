@@ -4,15 +4,21 @@ import Sidebar from "./Sidebar.tsx";
 import {
   applyLocalMove,
   checkWin,
+  DEFAULT_BOARD_SIZE,
   DEFAULT_TIME_CONTROL_ID,
   emptyBoard,
   type GameSnapshot,
+  MAX_BOARD_SIZE,
+  MIN_BOARD_SIZE,
   type Move,
   type Player,
   remainingMs,
   resolveFlagFall,
-  TIME_CONTROLS,
+  resolveTimeControl,
+  stoneCap,
 } from "../lib/game/index.ts";
+import TimeControlPicker from "./TimeControlPicker.tsx";
+import Dropdown from "./Dropdown.tsx";
 
 type PlayerInfo = {
   name: string;
@@ -26,12 +32,15 @@ type Ploy = {
   oMove: string | null; // e.g., "B2"
 };
 
-function createInitialSnapshot(timeControlId: string): GameSnapshot {
-  const control = TIME_CONTROLS[timeControlId] ??
-    TIME_CONTROLS[DEFAULT_TIME_CONTROL_ID];
+function createInitialSnapshot(
+  timeControlId: string,
+  size: number = DEFAULT_BOARD_SIZE,
+): GameSnapshot {
+  const control = resolveTimeControl(timeControlId);
 
   return {
-    board: emptyBoard(),
+    board: emptyBoard(size),
+    size,
     toMove: "X",
     ply: 0,
     clock: {
@@ -62,6 +71,7 @@ export default function GameManager() {
   );
   const [nowMs, setNowMs] = useState(Date.now());
   const [timeControlId, setTimeControlId] = useState(DEFAULT_TIME_CONTROL_ID);
+  const [boardSize, setBoardSize] = useState(DEFAULT_BOARD_SIZE);
   const [game, setGame] = useState<GameSnapshot>(() =>
     createInitialSnapshot(DEFAULT_TIME_CONTROL_ID)
   );
@@ -116,7 +126,7 @@ export default function GameManager() {
   };
 
   const handleReset = () => {
-    setGame(createInitialSnapshot(timeControlId));
+    setGame(createInitialSnapshot(timeControlId, boardSize));
     setPloys([]);
     setWinningLine(null);
     setNowMs(Date.now());
@@ -124,7 +134,16 @@ export default function GameManager() {
 
   const handleTimeControlChange = (value: string) => {
     setTimeControlId(value);
-    setGame(createInitialSnapshot(value));
+    setGame(createInitialSnapshot(value, boardSize));
+    setPloys([]);
+    setWinningLine(null);
+    setNowMs(Date.now());
+  };
+
+  const handleBoardSizeChange = (value: string) => {
+    const size = Number(value);
+    setBoardSize(size);
+    setGame(createInitialSnapshot(timeControlId, size));
     setPloys([]);
     setWinningLine(null);
     setNowMs(Date.now());
@@ -152,30 +171,43 @@ export default function GameManager() {
 
   const timeX = displayTimeSeconds("X");
   const timeO = displayTimeSeconds("O");
-  const timeControlOptions = Object.values(TIME_CONTROLS);
 
   return (
     <div class="w-full">
-      <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
-        <label class="text-sm text-gray-300" for="time-control-select">
-          Time preset
-        </label>
-        <select
-          id="time-control-select"
-          class="px-3 py-2 rounded bg-[#23211d] border border-white/20 text-white"
-          value={timeControlId}
-          onChange={(e) =>
-            handleTimeControlChange((e.currentTarget as HTMLSelectElement).value)}
-        >
-          {timeControlOptions.map((control) => (
-            <option key={control.id} value={control.id}>
-              {control.label}
-            </option>
-          ))}
-        </select>
+      <div class="mb-4 grid gap-3 sm:grid-cols-2">
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Time
+          </span>
+          <TimeControlPicker
+            value={timeControlId}
+            onChange={handleTimeControlChange}
+            showLabel={false}
+            selectClass="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white text-sm"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <span class="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Board
+          </span>
+          <Dropdown
+            id="board-size-select"
+            value={String(boardSize)}
+            options={Array.from(
+              { length: MAX_BOARD_SIZE - MIN_BOARD_SIZE + 1 },
+              (_, i) => MIN_BOARD_SIZE + i,
+            ).map((size) => ({
+              value: String(size),
+              label: `${size}×${size} · ${stoneCap(size)} stones`,
+            }))}
+            onChange={handleBoardSizeChange}
+            class="w-full text-sm"
+          />
+        </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4">
+      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4 w-full">
         <Board
           board={game.board}
           currentPlayer={game.toMove}
