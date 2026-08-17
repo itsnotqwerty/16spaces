@@ -4,9 +4,26 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $_middleware from "./routes/_middleware.ts";
+import * as $api_auth_callback from "./routes/api/auth/callback.ts";
+import * as $api_auth_guest from "./routes/api/auth/guest.ts";
+import * as $api_auth_login from "./routes/api/auth/login.ts";
+import * as $api_auth_logout from "./routes/api/auth/logout.ts";
+import * as $api_auth_magic from "./routes/api/auth/magic.ts";
+import * as $api_auth_session from "./routes/api/auth/session.ts";
+import * as $api_auth_signup from "./routes/api/auth/signup.ts";
+import * as $api_health from "./routes/api/health.ts";
 import * as $index from "./routes/index.tsx";
+import * as $l_new from "./routes/l/new.tsx";
+import * as $leaderboard from "./routes/leaderboard.tsx";
+import * as $local from "./routes/local.tsx";
+import * as $login from "./routes/login.tsx";
+import * as $queue from "./routes/queue.tsx";
+import * as $signup from "./routes/signup.tsx";
+import * as $AuthForm from "./islands/AuthForm.tsx";
 import * as $Board from "./islands/Board.tsx";
 import * as $GameManager from "./islands/GameManager.tsx";
+import * as $HomeMenu from "./islands/HomeMenu.tsx";
 import * as $Sidebar from "./islands/Sidebar.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -14,11 +31,28 @@ const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/_middleware.ts": $_middleware,
+    "./routes/api/auth/callback.ts": $api_auth_callback,
+    "./routes/api/auth/guest.ts": $api_auth_guest,
+    "./routes/api/auth/login.ts": $api_auth_login,
+    "./routes/api/auth/logout.ts": $api_auth_logout,
+    "./routes/api/auth/magic.ts": $api_auth_magic,
+    "./routes/api/auth/session.ts": $api_auth_session,
+    "./routes/api/auth/signup.ts": $api_auth_signup,
+    "./routes/api/health.ts": $api_health,
     "./routes/index.tsx": $index,
+    "./routes/l/new.tsx": $l_new,
+    "./routes/leaderboard.tsx": $leaderboard,
+    "./routes/local.tsx": $local,
+    "./routes/login.tsx": $login,
+    "./routes/queue.tsx": $queue,
+    "./routes/signup.tsx": $signup,
   },
   islands: {
+    "./islands/AuthForm.tsx": $AuthForm,
     "./islands/Board.tsx": $Board,
     "./islands/GameManager.tsx": $GameManager,
+    "./islands/HomeMenu.tsx": $HomeMenu,
     "./islands/Sidebar.tsx": $Sidebar,
   },
   baseUrl: import.meta.url,

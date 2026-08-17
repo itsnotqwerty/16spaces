@@ -1,6 +1,18 @@
-import { useState, useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import Board from "./Board.tsx";
 import Sidebar from "./Sidebar.tsx";
+import {
+  applyLocalMove,
+  checkWin,
+  DEFAULT_TIME_CONTROL_ID,
+  emptyBoard,
+  type GameSnapshot,
+  type Move,
+  type Player,
+  remainingMs,
+  resolveFlagFall,
+  TIME_CONTROLS,
+} from "../lib/game/index.ts";
 
 type PlayerInfo = {
   name: string;
@@ -14,6 +26,25 @@ type Ploy = {
   oMove: string | null; // e.g., "B2"
 };
 
+function createInitialSnapshot(timeControlId: string): GameSnapshot {
+  const control = TIME_CONTROLS[timeControlId] ??
+    TIME_CONTROLS[DEFAULT_TIME_CONTROL_ID];
+
+  return {
+    board: emptyBoard(),
+    toMove: "X",
+    ply: 0,
+    clock: {
+      remainingMsX: control.initialMs,
+      remainingMsO: control.initialMs,
+      incrementMs: control.incrementMs,
+      turnStartedAt: null,
+      clocksStartedAt: null,
+    },
+    terminal: null,
+  };
+}
+
 export default function GameManager() {
   const [playerX, _setPlayerX] = useState<PlayerInfo>({
     name: "Anonymous",
@@ -26,101 +57,142 @@ export default function GameManager() {
     isConnected: false,
   });
   const [ploys, setPloys] = useState<Ploy[]>([]);
-  const [maxTime, setMaxTime] = useState(150); // Set initial max time
-  const [timeX, setTimeX] = useState(maxTime);
-  const [timeO, setTimeO] = useState(maxTime);
-  const [timerActive, setTimerActive] = useState(false);
-  const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
-  const [winState, setWinState] = useState<"X" | "O" | null>(null); // Track the winner
+  const [winningLine, setWinningLine] = useState<[number, number][] | null>(
+    null,
+  );
+  const [nowMs, setNowMs] = useState(Date.now());
+  const [timeControlId, setTimeControlId] = useState(DEFAULT_TIME_CONTROL_ID);
+  const [game, setGame] = useState<GameSnapshot>(() =>
+    createInitialSnapshot(DEFAULT_TIME_CONTROL_ID)
+  );
+
+  const winState = game.terminal?.winner ?? null;
 
   useEffect(() => {
-    let timer: number | undefined;
-
-    if (timerActive && !winState) {
-      timer = setInterval(() => {
-        if (currentPlayer === "X") {
-          setTimeX((prev) => {
-            if (prev <= 1) {
-              setWinState("O"); // Player O wins
-              setTimerActive(false); // Stop the timer
-              return 0;
-            }
-            return prev - 1;
-          });
-        } else {
-          setTimeO((prev) => {
-            if (prev <= 1) {
-              setWinState("X"); // Player X wins
-              setTimerActive(false); // Stop the timer
-              return 0;
-            }
-            return prev - 1;
-          });
-        }
-      }, 1000);
-    }
+    const timer = setInterval(() => {
+      const now = new Date();
+      setNowMs(now.getTime());
+      setGame((prev) => resolveFlagFall(prev, now));
+    }, 250);
 
     return () => clearInterval(timer);
-  }, [timerActive, currentPlayer, winState]);
+  }, []);
 
-  const handleMove = (index: number, xMove: string | null, oMove: string | null) => {
-    if (winState) return; // Prevent moves if the game is over
-
-    setPloys((prevPloys) => {
-      const newPloys = [...prevPloys];
-      if (newPloys.length > index) {
-        newPloys.map((ploy, i) => {
-          if (i === index) {
-            ploy.xMove = xMove;
-            ploy.oMove = oMove;
-          }
-          return ploy;
-        });
-      } else {
-        newPloys.push({ index, xMove, oMove });
+  const appendPloy = (mover: Player, notation: string) => {
+    setPloys((prev) => {
+      if (mover === "X") {
+        return [...prev, { index: prev.length, xMove: notation, oMove: null }];
       }
-      return newPloys;
+
+      if (prev.length === 0) {
+        return [{ index: 0, xMove: null, oMove: notation }];
+      }
+
+      const next = [...prev];
+      const last = next[next.length - 1];
+      next[next.length - 1] = { ...last, oMove: notation };
+      return next;
     });
-
-    // Start the timer after the first move
-    if (!timerActive) {
-      setTimerActive(true);
-    }
-
-    // Switch the current player
-    setCurrentPlayer((prev) => (prev === "X" ? "O" : "X"));
   };
 
-  const handleWin = (winner: "X" | "O") => {
-    setWinState(winner);
-    setTimerActive(false); // Stop the timer
+  const handleIntent = (move: Move) => {
+    const now = new Date();
+    const mover = game.toMove;
+    const result = applyLocalMove(game, move, now);
+
+    if (!result.ok) {
+      if (result.error === "flag_fell") {
+        setGame(result.snapshot);
+      }
+      return;
+    }
+
+    setGame(result.snapshot);
+    appendPloy(mover, result.notation);
+
+    const win = checkWin(result.snapshot.board);
+    setWinningLine(win?.line ?? null);
+    setNowMs(now.getTime());
   };
 
   const handleReset = () => {
+    setGame(createInitialSnapshot(timeControlId));
     setPloys([]);
-    setTimeX(maxTime); // Reset to 2:30
-    setTimeO(maxTime); // Reset to 2:30
-    setCurrentPlayer("X");
-    setTimerActive(false);
-    setWinState(null); // Clear the winner
+    setWinningLine(null);
+    setNowMs(Date.now());
   };
 
+  const handleTimeControlChange = (value: string) => {
+    setTimeControlId(value);
+    setGame(createInitialSnapshot(value));
+    setPloys([]);
+    setWinningLine(null);
+    setNowMs(Date.now());
+  };
+
+  const displayTimeSeconds = (player: Player): number => {
+    const stored = player === "X"
+      ? game.clock.remainingMsX
+      : game.clock.remainingMsO;
+
+    if (game.terminal) {
+      return Math.ceil(stored / 1000);
+    }
+
+    const liveRemaining = remainingMs(
+      stored,
+      game.clock.turnStartedAt,
+      game.toMove,
+      player,
+      new Date(nowMs),
+    );
+
+    return Math.ceil(liveRemaining / 1000);
+  };
+
+  const timeX = displayTimeSeconds("X");
+  const timeO = displayTimeSeconds("O");
+  const timeControlOptions = Object.values(TIME_CONTROLS);
+
   return (
-    <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4">
-      <Board
-        moveHook={handleMove}
-        resetHook={handleReset}
-        winHook={handleWin}
-        winState={winState}
-      />
-      <Sidebar
-        playerX={playerX}
-        playerO={playerO}
-        ploys={ploys}
-        timeX={timeX}
-        timeO={timeO}
-        winState={winState}
-      />
+    <div class="w-full">
+      <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
+        <label class="text-sm text-gray-300" for="time-control-select">
+          Time preset
+        </label>
+        <select
+          id="time-control-select"
+          class="px-3 py-2 rounded bg-[#23211d] border border-white/20 text-white"
+          value={timeControlId}
+          onChange={(e) =>
+            handleTimeControlChange((e.currentTarget as HTMLSelectElement).value)}
+        >
+          {timeControlOptions.map((control) => (
+            <option key={control.id} value={control.id}>
+              {control.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4">
+        <Board
+          board={game.board}
+          currentPlayer={game.toMove}
+          winningLine={winningLine}
+          onIntent={handleIntent}
+          onReset={handleReset}
+          winState={winState}
+        />
+        <Sidebar
+          playerX={playerX}
+          playerO={playerO}
+          ploys={ploys}
+          timeX={timeX}
+          timeO={timeO}
+          winState={winState}
+        />
+      </div>
     </div>
   );
 }

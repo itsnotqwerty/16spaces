@@ -1,36 +1,30 @@
 import { useState } from "preact/hooks";
 import Space from "../components/Space.tsx";
-
-type Player = "X" | "O" | null;
-
-type Ploy = {
-  index: number; // e.g., 0, 1, 2, etc.
-  xMove: string | null; // e.g., "A1"
-  oMove: string | null; // e.g., "B2"
-};
+import {
+  type Board as GameBoard,
+  isAdjacent,
+  type Move,
+  type Player,
+} from "../lib/game/index.ts";
 
 type BoardProps = {
-  moveHook: (index: number, xMove: string | null, oMove: string | null) => void;
-  resetHook: () => void;
-  winHook: (winner: "X" | "O") => void;
-  winState: "X" | "O" | null;
+  board: GameBoard;
+  currentPlayer: Player;
+  winningLine: [number, number][] | null;
+  onIntent: (move: Move) => void;
+  onReset: () => void;
+  winState: Player | null;
 };
 
 export default function Board(props: BoardProps) {
-  const [board, setBoard] = useState<Player[][]>(
-    Array(4).fill(Array(4).fill(null))
-  );
-  const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
-  const [selectedStone, setSelectedStone] = useState<{ x: number; y: number } | null>(null);
-  const [winningLine, setWinningLine] = useState<number[][] | null>(null);
-  const [currentPloy, setCurrentPloy] = useState<Ploy | null>({
-    index: 0,
-    xMove: null,
-    oMove: null,
-  });
+  const [selectedStone, setSelectedStone] = useState<
+    { x: number; y: number } | null
+  >(null);
 
   const handleCellClick = (x: number, y: number) => {
     if (props.winState) return; // Ignore clicks if the game is over
+
+    const cell = props.board[x][y];
 
     if (selectedStone) {
       // Deselect the currently selected stone if clicked again
@@ -39,104 +33,27 @@ export default function Board(props: BoardProps) {
         return;
       }
 
-      // Move an existing stone
-      if (board[x][y] === null && isAdjacent(selectedStone, { x, y })) {
-        const newBoard = board.map((row, i) =>
-          row.map((cell, j) =>
-            i === x && j === y
-              ? currentPlayer
-              : i === selectedStone.x && j === selectedStone.y
-              ? null
-              : cell
-          )
-        );
+      if (cell === props.currentPlayer) {
+        setSelectedStone({ x, y });
+        return;
+      }
 
-        const moveRepresentation = `${String.fromCharCode(65 + selectedStone.y)}${selectedStone.x + 1}->${String.fromCharCode(65 + y)}${x + 1}`;
-        if (currentPlayer === "X") {
-          setCurrentPloy({index: currentPloy!.index, xMove: moveRepresentation, oMove: null});
-          props.moveHook(currentPloy!.index, moveRepresentation, null); // Notify GameManager of the move
-        } else if (currentPlayer === "O") {
-          setCurrentPloy({ index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation });
-          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation); // Notify GameManager of the move
-          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null }); // Increment the index for the next move
-        }
-
-        setBoard(newBoard);
+      if (cell === null && isAdjacent(selectedStone, { x, y })) {
+        props.onIntent({ kind: "slide", from: selectedStone, to: { x, y } });
         setSelectedStone(null);
-
-        const winResult = checkWin(newBoard);
-        if (winResult) {
-          props.winHook(winResult.winner); // Notify GameManager of the winner
-          setWinningLine(winResult.line);
-        }
-
-        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
       }
     } else {
-      // Place a new stone
-      if (board[x][y] === null && countStones(currentPlayer) < 5) {
-        const newBoard = board.map((row, i) =>
-          row.map((cell, j) => (i === x && j === y ? currentPlayer : cell))
-        );
-
-        const moveRepresentation = `${String.fromCharCode(65 + y)}${x + 1}`;
-        if (currentPlayer === "X") {
-          setCurrentPloy({index: currentPloy!.index, xMove: moveRepresentation, oMove: null});
-          props.moveHook(currentPloy!.index, moveRepresentation, null); // Notify GameManager of the move
-        } else if (currentPlayer === "O") {
-          setCurrentPloy({ index: currentPloy!.index, xMove: currentPloy!.xMove, oMove: moveRepresentation });
-          props.moveHook(currentPloy!.index, currentPloy!.xMove, moveRepresentation); // Notify GameManager of the move
-          setCurrentPloy({ index: currentPloy!.index + 1, xMove: null, oMove: null }); // Increment the index for the next move
-        }
-
-        setBoard(newBoard);
-
-        const winResult = checkWin(newBoard);
-        if (winResult) {
-          props.winHook(winResult.winner); // Notify GameManager of the winner
-          setWinningLine(winResult.line);
-        }
-
-        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-      } else if (board[x][y] === currentPlayer) {
+      if (cell === null) {
+        props.onIntent({ kind: "place", to: { x, y } });
+      } else if (cell === props.currentPlayer) {
         setSelectedStone({ x, y });
       }
     }
   };
 
-  const isAdjacent = (from: { x: number; y: number }, to: { x: number; y: number }) => {
-    const dx = Math.abs(from.x - to.x);
-    const dy = Math.abs(from.y - to.y);
-    return dx <= 1 && dy <= 1 && (dx + dy > 0);
-  };
-
-  const countStones = (player: Player) =>
-    board.flat().filter((cell) => cell === player).length;
-
-  const checkWin = (boardPos: Player[][]): { winner: "X" | "O"; line: number[][] } | null => {
-    const lines = [
-      ...boardPos.map((row, i) => row.map((_, j) => [i, j])), // Rows
-      ...boardPos[0].map((_, col) => boardPos.map((_, row) => [row, col])), // Columns
-      boardPos.map((_, i) => [i, i]), // Main diagonal
-      boardPos.map((_, i) => [i, boardPos.length - 1 - i]), // Anti-diagonal
-    ];
-
-    for (const line of lines) {
-      const cells = line.map(([x, y]) => boardPos[x][y]);
-      if (cells.every((cell) => cell === "X")) return { winner: "X", line };
-      if (cells.every((cell) => cell === "O")) return { winner: "O", line };
-    }
-
-    return null;
-  };
-
   const resetGame = () => {
-    setBoard(Array(4).fill(Array(4).fill(null))); // Clear the board
-    setCurrentPlayer("X"); // Reset to player X
     setSelectedStone(null); // Clear selected stone
-    setWinningLine(null); // Clear winning line
-    setCurrentPloy({ index: 0, xMove: null, oMove: null }); // Reset ploy
-    props.resetHook(); // Call the reset hook
+    props.onReset(); // Call the reset hook
   };
 
   const [rulesShowing, setRulesShowing] = useState(false);
@@ -145,21 +62,24 @@ export default function Board(props: BoardProps) {
   };
 
   return (
-    <div class="my-2 ml-0 mr-4">
+    <div class="my-2 w-full max-w-[34rem] mr-0 sm:mr-4">
       {/* Top labels */}
-      <div class="grid grid-cols-5 gap-1 mb-2">
+      <div class="grid grid-cols-[2rem_repeat(4,minmax(0,1fr))] sm:grid-cols-[2.25rem_repeat(4,minmax(0,1fr))] gap-1 mb-2">
         <div></div> {/* Empty corner */}
         {["A", "B", "C", "D"].map((label) => (
-          <div key={label} class="text-center text-2xl text-white font-bold">
+          <div key={label} class="text-center text-xl sm:text-2xl text-white font-bold">
             {label}
           </div>
         ))}
       </div>
       {/* Board with side labels */}
       <div class="grid grid-rows-4 gap-1">
-        {board.map((row, x) => (
-          <div key={x} class="grid grid-cols-5 gap-1">
-            <div class="flex items-center justify-center text-2xl text-white font-bold">{x + 1}</div> {/* Side label */}
+        {props.board.map((row, x) => (
+          <div key={x} class="grid grid-cols-[2rem_repeat(4,minmax(0,1fr))] sm:grid-cols-[2.25rem_repeat(4,minmax(0,1fr))] gap-1">
+            <div class="flex items-center justify-center text-xl sm:text-2xl text-white font-bold">
+              {x + 1}
+            </div>
+            {/* Side label */}
             {row.map((cell, y) => (
               <Space
                 key={`${x}-${y}`}
@@ -167,7 +87,9 @@ export default function Board(props: BoardProps) {
                 y={y}
                 value={cell}
                 isSelected={selectedStone?.x === x && selectedStone?.y === y}
-                isWinning={winningLine?.some(([wx, wy]) => wx === x && wy === y) || false}
+                isWinning={props.winningLine?.some(([wx, wy]) =>
+                  wx === x && wy === y
+                ) || false}
                 onClick={() => handleCellClick(x, y)}
               />
             ))}
@@ -175,30 +97,52 @@ export default function Board(props: BoardProps) {
         ))}
       </div>
       <div class="flex flex-row justify-center sm:justify-start items-center space-x-4">
-        <button type="button" class="mt-4 p-2 bg-red-500 text-white rounded" onClick={resetGame}>
+        <button
+          type="button"
+          class="mt-4 p-2 bg-red-500 text-white rounded"
+          onClick={resetGame}
+        >
           Reset Game
         </button>
-        <button type="button" class="mt-4 p-2 bg-blue-500 text-white rounded" onClick={toggleRules}>
+        <button
+          type="button"
+          class="mt-4 p-2 bg-blue-500 text-white rounded"
+          onClick={toggleRules}
+        >
           Show Rules
         </button>
       </div>
-      {
-        rulesShowing && (
-          <div class="absolute top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 min-w-[80%] mt-4 text-white bg-[#161512] border-2 border-white rounded p-4 z-50 sm:block">
-              <h2 class="text-lg font-bold mb-2">Game Rules:</h2>
-              <ul class="list-disc list-inside">
-              <li>Players take turns placing or moving their stones on the 4x4 board.</li>
-              <li>Each player can have a maximum of 5 stones on the board at any time.</li>
-              <li>To place a stone, click on an empty space. To move a stone, click on your stone and then on an adjacent empty space.</li>
-              <li>The first player to align 4 of their stones horizontally, vertically, or diagonally wins the game.</li>
-              <li>If a player's time runs out, their opponent wins the game.</li>
-              <button type="button" class="mt-4 p-2 bg-red-500 text-white rounded" onClick={toggleRules}>
-                Close Rules
-              </button>
-            </ul>
-          </div>
-        )
-      }
+      {rulesShowing && (
+        <div class="absolute top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 min-w-[80%] mt-4 text-white bg-[#161512] border-2 border-white rounded p-4 z-50 sm:block">
+          <h2 class="text-lg font-bold mb-2">Game Rules:</h2>
+          <ul class="list-disc list-inside">
+            <li>
+              Players take turns placing or moving their stones on the 4x4
+              board.
+            </li>
+            <li>
+              Each player can have a maximum of 5 stones on the board at any
+              time.
+            </li>
+            <li>
+              To place a stone, click on an empty space. To move a stone, click
+              on your stone and then on an adjacent empty space.
+            </li>
+            <li>
+              The first player to align 4 of their stones horizontally,
+              vertically, or diagonally wins the game.
+            </li>
+            <li>If a player's time runs out, their opponent wins the game.</li>
+          </ul>
+          <button
+            type="button"
+            class="mt-4 p-2 bg-red-500 text-white rounded"
+            onClick={toggleRules}
+          >
+            Close Rules
+          </button>
+        </div>
+      )}
     </div>
   );
 }

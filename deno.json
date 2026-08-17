@@ -2,16 +2,20 @@
   "lock": false,
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
+    "test": "deno test -A lib/",
     "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
     "manifest": "deno task cli manifest $(pwd)",
-    "start": "deno run -A --watch=static/,routes/ dev.ts",
-    "build": "deno run -A dev.ts build",
-    "preview": "deno run -A main.ts",
+    "start": "deno run --env-file=.env -A --watch=static/,routes/ dev.ts",
+    "build": "deno run --env-file=.env -A dev.ts build",
+    "preview": "deno run --env-file=.env -A main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update ."
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],
   "imports": {
+    "lib/": "./lib/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.49.1",
+    "jose": "https://esm.sh/jose@5.9.6",
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
     "preact": "https://esm.sh/preact@10.22.0",
     "preact/": "https://esm.sh/preact@10.22.0/",

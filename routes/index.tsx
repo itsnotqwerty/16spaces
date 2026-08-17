@@ -1,10 +1,16 @@
-import GameManager from "../islands/GameManager.tsx";
+import Layout from "../components/Layout.tsx";
+import HomeMenu from "../islands/HomeMenu.tsx";
 
 export default function Home() {
   return (
-    <div class="p-4 mx-auto min-h-screen bg-[#161512]">
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580"
-        crossorigin="anonymous"></script>
+    <Layout>
+      <div class="space-y-6">
+        <h1 class="text-4xl font-bold">Welcome to 16spaces</h1>
+        <p class="text-gray-300 max-w-2xl">
+          The multiplayer transition is underway. Start with local hot-seat now,
+          and online play, auth, lobbies, and matchmaking will roll out in phases.
+        </p>
+
         <ins class="adsbygoogle block"
             data-ad-client="ca-pub-2088911413615580"
             data-ad-slot="1847367891"
@@ -13,24 +19,18 @@ export default function Home() {
         <script>
             (adsbygoogle = window.adsbygoogle || []).push({});
         </script>
-      <div class="max-w-screen-md mx-auto flex flex-col items-center justify-center">
-        <h1 class="text-4xl text-white font-bold text-center sm:text-left">Welcome to 16spaces</h1>
-        <div class="flex flex-row items-center justify-center w-full mt-4 space-x-4">
-          <GameManager />
-        </div>
+
+        <HomeMenu />
+
+        <ins class="adsbygoogle block"
+            data-ad-client="ca-pub-2088911413615580"
+            data-ad-slot="1847367891"
+            data-ad-format="auto"
+            data-full-width-responsive="true"></ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
       </div>
-      <p class="max-w-screen-md mx-auto flex flex-row justify-center items-center text-white">©2025 Samuel Roux - All rights reserved</p>
-      <span class="max-w-screen-md mx-auto flex flex-row justify-center items-center"><a href="https://github.com/itsnotqwerty/16spaces/" class="text-blue-400">View the Code</a></span>
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088911413615580"
-        crossorigin="anonymous"></script>
-        <ins class="adsbygoogle block"
-            data-ad-client="ca-pub-2088911413615580"
-            data-ad-slot="1847367891"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-        <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-    </div>
+    </Layout>
   );
 }
