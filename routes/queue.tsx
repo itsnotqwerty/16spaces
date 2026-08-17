@@ -19,7 +19,7 @@ export const handler: Handlers<QueueData, AppState> = {
 
 export default function QueuePage({ data }: PageProps<QueueData>) {
   return (
-    <Layout>
+    <Layout isAuthenticated={data.isAuthenticated}>
       <div class="space-y-4 max-w-2xl">
         <h1 class="text-3xl font-bold">Queue</h1>
         <p class="text-gray-300">
@@ -28,9 +28,12 @@ export default function QueuePage({ data }: PageProps<QueueData>) {
         {data.isAuthenticated
           ? (
             <div class="rounded border border-emerald-500/30 bg-emerald-500/10 p-4 space-y-2">
-              <p class="text-sm text-emerald-200">Signed in. Queue entry is available for this session.</p>
+              <p class="text-sm text-emerald-200">
+                Signed in. Queue entry is available for this session.
+              </p>
               <p class="text-xs text-emerald-100/80">
-                Queue matching is live for this MVP; game handoff is still a placeholder.
+                Queue matching is live for this MVP; game handoff is still a
+                placeholder.
               </p>
             </div>
           )
@@ -40,10 +43,16 @@ export default function QueuePage({ data }: PageProps<QueueData>) {
                 To continue now, sign in or start as guest.
               </p>
               <div class="flex gap-3">
-                <a href="/login" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500">
+                <a
+                  href="/login"
+                  class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500"
+                >
                   Sign in
                 </a>
-                <a href="/signup" class="px-3 py-2 rounded bg-white/10 hover:bg-white/20">
+                <a
+                  href="/signup"
+                  class="px-3 py-2 rounded bg-white/10 hover:bg-white/20"
+                >
                   Create account
                 </a>
               </div>

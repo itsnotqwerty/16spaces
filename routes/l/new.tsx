@@ -15,7 +15,7 @@ export const handler: Handlers<LobbyData, AppState> = {
 
 export default function CreateLobbyPage({ data }: PageProps<LobbyData>) {
   return (
-    <Layout>
+    <Layout isAuthenticated={data.isAuthenticated}>
       <div class="space-y-4 max-w-2xl">
         <h1 class="text-3xl font-bold">Create Lobby</h1>
         <p class="text-gray-300">

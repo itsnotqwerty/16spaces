@@ -43,6 +43,7 @@ import * as $GameManager from "./islands/GameManager.tsx";
 import * as $HomeMenu from "./islands/HomeMenu.tsx";
 import * as $LobbyCreate from "./islands/LobbyCreate.tsx";
 import * as $LobbyRoom from "./islands/LobbyRoom.tsx";
+import * as $LogoutButton from "./islands/LogoutButton.tsx";
 import * as $OnlineGame from "./islands/OnlineGame.tsx";
 import * as $QueueWait from "./islands/QueueWait.tsx";
 import * as $Sidebar from "./islands/Sidebar.tsx";
@@ -93,6 +94,7 @@ const manifest = {
     "./islands/HomeMenu.tsx": $HomeMenu,
     "./islands/LobbyCreate.tsx": $LobbyCreate,
     "./islands/LobbyRoom.tsx": $LobbyRoom,
+    "./islands/LogoutButton.tsx": $LogoutButton,
     "./islands/OnlineGame.tsx": $OnlineGame,
     "./islands/QueueWait.tsx": $QueueWait,
     "./islands/Sidebar.tsx": $Sidebar,

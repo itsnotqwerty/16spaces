@@ -1,9 +1,21 @@
+import { Handlers, PageProps } from "$fresh/server.ts";
 import Layout from "../components/Layout.tsx";
 import GameManager from "../islands/GameManager.tsx";
+import type { AppState } from "./_middleware.ts";
 
-export default function Local() {
+type LocalData = {
+  isAuthenticated: boolean;
+};
+
+export const handler: Handlers<LocalData, AppState> = {
+  GET(_req, ctx) {
+    return ctx.render({ isAuthenticated: Boolean(ctx.state.user) });
+  },
+};
+
+export default function Local({ data }: PageProps<LocalData>) {
   return (
-    <Layout>
+    <Layout isAuthenticated={data.isAuthenticated}>
       <div class="space-y-4">
         <h1 class="text-3xl font-bold">Play Local</h1>
         <p class="text-gray-300">

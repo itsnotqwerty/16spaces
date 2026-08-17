@@ -1,20 +1,25 @@
 import type { Handlers, PageProps } from "$fresh/server.ts";
 import Layout from "../components/Layout.tsx";
 import { allFlags } from "../lib/flags.ts";
+import type { AppState } from "./_middleware.ts";
 
 type LeaderboardData = {
   ratedEnabled: boolean;
+  isAuthenticated: boolean;
 };
 
-export const handler: Handlers<LeaderboardData> = {
+export const handler: Handlers<LeaderboardData, AppState> = {
   GET(_req, ctx) {
-    return ctx.render({ ratedEnabled: allFlags().FEATURE_RATED });
+    return ctx.render({
+      ratedEnabled: allFlags().FEATURE_RATED,
+      isAuthenticated: Boolean(ctx.state.user),
+    });
   },
 };
 
 export default function LeaderboardPage({ data }: PageProps<LeaderboardData>) {
   return (
-    <Layout>
+    <Layout isAuthenticated={data.isAuthenticated}>
       <div class="space-y-4 max-w-2xl">
         <h1 class="text-3xl font-bold">Leaderboard</h1>
         <p class="text-gray-300">
