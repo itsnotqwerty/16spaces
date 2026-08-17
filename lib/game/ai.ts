@@ -16,9 +16,9 @@ export type AiParams = {
 
 export const AI_LEVELS: Record<AiDifficulty, AiParams> = {
   1: { randomness: 0.85, depth: 1, minDelayMs: 3000, maxDelayMs: 4000 },
-  2: { randomness: 0.55, depth: 1, minDelayMs: 3000, maxDelayMs: 4500 },
-  3: { randomness: 0.3, depth: 2, minDelayMs: 3500, maxDelayMs: 5500 },
-  4: { randomness: 0.12, depth: 3, minDelayMs: 4000, maxDelayMs: 6500 },
+  2: { randomness: 0.3, depth: 2, minDelayMs: 3000, maxDelayMs: 4500 },
+  3: { randomness: 0.12, depth: 3, minDelayMs: 3500, maxDelayMs: 5500 },
+  4: { randomness: 0.05, depth: 5, minDelayMs: 4000, maxDelayMs: 6500 },
   5: { randomness: 0.02, depth: 5, minDelayMs: 4500, maxDelayMs: 8000 },
 };
 
