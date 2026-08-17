@@ -9,7 +9,7 @@ Group=__APP_USER__
 WorkingDirectory=__APP_DIR__
 Environment=PORT=__PORT__
 EnvironmentFile=-__ENV_FILE__
-ExecStart=__DENO_BIN__ task preview
+ExecStart=__DENO_BIN__ run -A main.ts
 Restart=always
 RestartSec=5
 NoNewPrivileges=true
