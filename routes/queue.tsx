@@ -29,11 +29,7 @@ export default function QueuePage({ data }: PageProps<QueueData>) {
           ? (
             <div class="rounded border border-emerald-500/30 bg-emerald-500/10 p-4 space-y-2">
               <p class="text-sm text-emerald-200">
-                Signed in. Queue entry is available for this session.
-              </p>
-              <p class="text-xs text-emerald-100/80">
-                Queue matching is live for this MVP; game handoff is still a
-                placeholder.
+                Signed in. Matchmaking is available for this session.
               </p>
             </div>
           )
