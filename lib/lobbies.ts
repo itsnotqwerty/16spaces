@@ -52,7 +52,6 @@ export type CreateLobbyInput = {
 export type LobbyErrorCode =
   | "not_found"
   | "forbidden"
-  | "already_engaged"
   | "lobby_full"
   | "lobby_not_open"
   | "not_host"
@@ -182,21 +181,10 @@ function ratedEligible(user: LobbyUserContext): LobbyErrorCode | null {
   return null;
 }
 
-/** A user is engaged if they hold a queue ticket or belong to another lobby. */
-function engagementConflict(userId: string, lobby: Lobby | null): boolean {
-  if (getUserTicket(userId)) return true;
-  const existingLobbyId = lobbyIdByUser.get(userId);
-  return existingLobbyId !== undefined && existingLobbyId !== lobby?.lobbyId;
-}
-
 export function createLobby(
   user: LobbyUserContext,
   input: CreateLobbyInput,
 ): LobbyResult<Lobby> {
-  if (engagementConflict(user.id, null)) {
-    return { ok: false, code: "already_engaged" };
-  }
-
   const rated = input.rated === true;
   if (rated) {
     const code = ratedEligible(user);
@@ -272,9 +260,6 @@ export function joinLobby(
   }
   if (lobby.members.length >= CAPACITY) {
     return { ok: false, code: "lobby_full" };
-  }
-  if (engagementConflict(user.id, lobby)) {
-    return { ok: false, code: "already_engaged" };
   }
   if (lobby.options.rated) {
     const err = ratedEligible(user);
@@ -358,12 +343,6 @@ export function startLobby(
     }
     if (!lobby.members.every((m) => m.ready || m.isHost)) {
       return { ok: false, code: "members_not_ready" };
-    }
-  }
-
-  for (const member of lobby.members) {
-    if (engagementConflict(member.userId, lobby)) {
-      return { ok: false, code: "already_engaged" };
     }
   }
 
