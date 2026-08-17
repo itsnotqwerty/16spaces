@@ -1,0 +1,18 @@
+[Unit]
+Description=16spaces Fresh app
+After=network.target
+
+[Service]
+Type=simple
+User=__APP_USER__
+Group=__APP_USER__
+WorkingDirectory=__APP_DIR__
+Environment=PORT=__PORT__
+EnvironmentFile=-__ENV_FILE__
+ExecStart=__DENO_BIN__ task preview
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
