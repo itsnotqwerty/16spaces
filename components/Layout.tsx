@@ -20,7 +20,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      <main class="max-w-screen-lg mx-auto px-4 py-8">
+      <main class="max-w-screen-lg mx-auto px-4 py-8 flex flex-col items-center justify-center">
         {children}
       </main>
 

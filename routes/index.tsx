@@ -10,26 +10,7 @@ export default function Home() {
           The multiplayer transition is underway. Start with local hot-seat now,
           and online play, auth, lobbies, and matchmaking will roll out in phases.
         </p>
-
-        <ins class="adsbygoogle block"
-            data-ad-client="ca-pub-2088911413615580"
-            data-ad-slot="1847367891"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-        <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-
         <HomeMenu />
-
-        <ins class="adsbygoogle block"
-            data-ad-client="ca-pub-2088911413615580"
-            data-ad-slot="1847367891"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-        <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
       </div>
     </Layout>
   );
