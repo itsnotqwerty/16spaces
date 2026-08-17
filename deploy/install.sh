@@ -111,6 +111,12 @@ else
   fi
 fi
 
+if [[ "$deno_bin" == /root/.deno/bin/deno ]]; then
+  install -d -m 0755 /usr/local/bin
+  install -m 0755 "$deno_bin" /usr/local/bin/deno
+  deno_bin="/usr/local/bin/deno"
+fi
+
 if ! id -u "$app_user" >/dev/null 2>&1; then
   useradd --system --create-home --shell /usr/sbin/nologin --user-group "$app_user"
 fi
