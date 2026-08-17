@@ -36,7 +36,7 @@ function createInitialSnapshot(
   timeControlId: string,
   size: number = DEFAULT_BOARD_SIZE,
 ): GameSnapshot {
-  const control = resolveTimeControl(timeControlId);
+  const control = resolveTimeControl(timeControlId, size);
 
   return {
     board: emptyBoard(size),
@@ -182,6 +182,7 @@ export default function GameManager() {
           <TimeControlPicker
             value={timeControlId}
             onChange={handleTimeControlChange}
+            size={boardSize}
             showLabel={false}
             selectClass="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white text-sm"
           />

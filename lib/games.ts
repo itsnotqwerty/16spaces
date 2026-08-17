@@ -64,7 +64,7 @@ function initialSnapshot(
   timeControlId: string,
   boardSize: number = DEFAULT_BOARD_SIZE,
 ): GameSnapshot {
-  const control = resolveTimeControl(timeControlId);
+  const control = resolveTimeControl(timeControlId, boardSize);
 
   return {
     board: emptyBoard(boardSize),

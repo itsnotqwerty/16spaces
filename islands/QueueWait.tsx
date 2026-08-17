@@ -188,6 +188,7 @@ export default function QueueWait() {
           <TimeControlPicker
             value={timeControlId}
             onChange={setTimeControlId}
+            size={boardSize}
             showLabel={false}
             selectClass="w-full rounded bg-[#23211d] border border-white/20 px-3 py-2 text-white text-sm"
           />

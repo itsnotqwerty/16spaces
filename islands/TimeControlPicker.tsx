@@ -1,5 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
-import { parseCustomTimeControl, TIME_CONTROLS } from "../lib/game/index.ts";
+import {
+  DEFAULT_BOARD_SIZE,
+  parseCustomTimeControl,
+  timeControlsForSize,
+} from "../lib/game/index.ts";
 import Dropdown from "./Dropdown.tsx";
 
 const CUSTOM_VALUE = "__custom__";
@@ -19,6 +23,8 @@ type TimeControlPickerProps = {
   /** Current control id — a preset id or "custom:X:XX+Y". */
   value: string;
   onChange: (id: string) => void;
+  /** Board size used to scale preset labels/values. Defaults to 4. */
+  size?: number;
   /** Render the built-in label; callers that render their own should pass false. */
   showLabel?: boolean;
   labelClass?: string;
@@ -28,6 +34,7 @@ type TimeControlPickerProps = {
 export default function TimeControlPicker({
   value,
   onChange,
+  size = DEFAULT_BOARD_SIZE,
   showLabel = true,
   labelClass = "text-sm text-gray-300",
   selectClass =
@@ -36,6 +43,7 @@ export default function TimeControlPicker({
   const isCustom = value.startsWith("custom:");
   const [customText, setCustomText] = useState("2:30+0");
   const [customValid, setCustomValid] = useState(true);
+  const presets = timeControlsForSize(size);
 
   // Keep the text field in sync when a custom value comes from elsewhere.
   useEffect(() => {
@@ -64,7 +72,7 @@ export default function TimeControlPicker({
         id="time-control-select"
         value={isCustom ? CUSTOM_VALUE : value}
         options={[
-          ...Object.values(TIME_CONTROLS).map((control) => ({
+          ...presets.map((control) => ({
             value: control.id,
             label: control.label,
           })),

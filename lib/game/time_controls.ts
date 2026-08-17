@@ -17,6 +17,44 @@ export const TIME_CONTROLS: Record<string, TimeControl> = {
 
 export const DEFAULT_TIME_CONTROL_ID = "classic";
 
+/** Reference size that the base presets are tuned for (4×4). */
+const BASE_SIZE = 4;
+
+/** Round to a "nice" second value for readable labels. */
+function roundSeconds(ms: number): number {
+  const sec = Math.round(ms / 1000);
+  return sec * 1000;
+}
+
+function formatLabel(ms: number, incrementMs: number): string {
+  const totalSec = Math.round(ms / 1000);
+  const minutes = Math.floor(totalSec / 60);
+  const seconds = totalSec % 60;
+  const inc = Math.round(incrementMs / 1000);
+  return `${minutes}:${seconds.toString().padStart(2, "0")}+${inc}`;
+}
+
+/**
+ * Returns the preset time controls scaled for a given board size.
+ * Larger boards need more moves, so initial time scales with board area
+ * relative to the 4×4 base (clamped to a sane range).
+ */
+export function timeControlsForSize(size: number): TimeControl[] {
+  const scale = Math.max(
+    0.5,
+    Math.min(3, (size * size) / (BASE_SIZE * BASE_SIZE)),
+  );
+  return Object.values(TIME_CONTROLS).map((control) => {
+    const initialMs = roundSeconds(control.initialMs * scale);
+    return {
+      id: control.id,
+      label: formatLabel(initialMs, control.incrementMs),
+      initialMs,
+      incrementMs: control.incrementMs,
+    };
+  });
+}
+
 const CUSTOM_ID_PREFIX = "custom:";
 
 /**
@@ -48,11 +86,19 @@ export function parseCustomTimeControl(
   return { initialMs, incrementMs: increment * 1000 };
 }
 
-/** Resolves a preset id or a "custom:X:XX+Y" id into a TimeControl. */
-export function resolveTimeControl(id: string): TimeControl {
+/**
+ * Resolves a preset id or a "custom:X:XX+Y" id into a TimeControl.
+ * When `size` is given, preset values are scaled to that board size;
+ * custom values are used as-is.
+ */
+export function resolveTimeControl(id: string, size?: number): TimeControl {
   const preset = TIME_CONTROLS[id];
   if (preset) {
-    return preset;
+    if (size === undefined) {
+      return preset;
+    }
+    const scaled = timeControlsForSize(size).find((c) => c.id === id);
+    return scaled ?? preset;
   }
 
   if (id.startsWith(CUSTOM_ID_PREFIX)) {
@@ -67,5 +113,5 @@ export function resolveTimeControl(id: string): TimeControl {
     }
   }
 
-  return TIME_CONTROLS[DEFAULT_TIME_CONTROL_ID];
+  return resolveTimeControl(DEFAULT_TIME_CONTROL_ID, size);
 }
