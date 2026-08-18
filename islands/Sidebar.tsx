@@ -5,6 +5,10 @@ type PlayerInfo = {
   name: string;
   elo: number;
   isConnected: boolean;
+  /** Stones left to place; label is hidden when omitted. */
+  stonesRemaining?: number;
+  /** Total stones available; required when stonesRemaining is set. */
+  stonesTotal?: number;
 };
 
 type IPloy = {
@@ -59,6 +63,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
           <div class={`flex flex-row text-xl font-bold ${ timeX < 30 ? "text-red-600" : "text-gray-600" }`}>
             {formatTime(timeX)}
           </div>
+          {playerX.stonesRemaining !== undefined && playerX.stonesTotal !== undefined && (
+            <div class="text-xs font-bold text-gray-600">
+              Remaining Stones: {playerX.stonesRemaining}/{playerX.stonesTotal}
+            </div>
+          )}
         </div>
         <div class="flex flex-col mb-2">
           <div class="flex flex-row">
@@ -76,6 +85,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
           <div class={`flex flex-row text-xl font-bold ${ timeO < 30 ? "text-red-600" : "text-gray-600" }`}>
             {formatTime(timeO)}
           </div>
+          {playerO.stonesRemaining !== undefined && playerO.stonesTotal !== undefined && (
+            <div class="text-xs font-bold text-gray-600">
+              Remaining Stones: {playerO.stonesRemaining}/{playerO.stonesTotal}
+            </div>
+          )}
         </div>
       </div>
 

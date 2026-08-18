@@ -2,9 +2,11 @@ import { useState } from "preact/hooks";
 import Space from "../components/Space.tsx";
 import {
   type Board as GameBoard,
+  countStones,
   isAdjacent,
   type Move,
   type Player,
+  stoneCap,
 } from "../lib/game/index.ts";
 
 type BoardProps = {
@@ -16,6 +18,8 @@ type BoardProps = {
   winState: Player | null;
   tutorialTargets?: Array<{ x: number; y: number }>;
   onSelectionChange?: (coord: { x: number; y: number } | null) => void;
+  /** Fired when the player tries to place a stone while at their stone cap. */
+  onStoneCapHit?: () => void;
 };
 
 export default function Board(props: BoardProps) {
@@ -49,6 +53,10 @@ export default function Board(props: BoardProps) {
       }
     } else {
       if (cell === null) {
+        if (countStones(props.board, props.currentPlayer) >= stoneCap(props.board.length)) {
+          props.onStoneCapHit?.();
+          return;
+        }
         props.onIntent({ kind: "place", to: { x, y } });
       } else if (cell === props.currentPlayer) {
         setSelectedStone({ x, y });

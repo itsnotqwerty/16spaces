@@ -3,10 +3,12 @@ import Board from "./Board.tsx";
 import Sidebar from "./Sidebar.tsx";
 import {
   checkWin,
+  countStones,
   type GameSnapshot,
   type Move as GameMove,
   type Player,
-  remainingMs
+  remainingMs,
+  stoneCap
 } from "../lib/game/index.ts";
 
 type GameMoveRecord = {
@@ -253,11 +255,15 @@ export default function OnlineGame({ gameId }: { gameId: string }) {
             name: yourPlayer === "X" ? "You" : "Opponent",
             elo: game.players.X.rating.rating,
             isConnected: true,
+            stonesRemaining: stoneCap(snapshot.size) - countStones(snapshot.board, "X"),
+            stonesTotal: stoneCap(snapshot.size),
           }}
           playerO={{
             name: yourPlayer === "O" ? "You" : "Opponent",
             elo: game.players.O.rating.rating,
             isConnected: true,
+            stonesRemaining: stoneCap(snapshot.size) - countStones(snapshot.board, "O"),
+            stonesTotal: stoneCap(snapshot.size),
           }}
           ploys={movesToPloys(game.moves)}
           timeX={displayTimeSeconds("X")}

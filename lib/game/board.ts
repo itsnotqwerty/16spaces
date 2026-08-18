@@ -3,7 +3,7 @@ import type { Board, Cell, Player } from "./types.ts";
 export const BOARD_SIZE = 4;
 export const DEFAULT_BOARD_SIZE = 4;
 export const MIN_BOARD_SIZE = 3;
-export const MAX_BOARD_SIZE = 9;
+export const MAX_BOARD_SIZE = 6;
 
 /** Stones available to each player for a given board size. */
 export function stoneCap(size: number): number {

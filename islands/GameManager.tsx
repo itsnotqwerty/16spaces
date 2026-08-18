@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar.tsx";
 import {
   applyLocalMove,
   checkWin,
+  countStones,
   DEFAULT_BOARD_SIZE,
   DEFAULT_TIME_CONTROL_ID,
   emptyBoard,
@@ -218,8 +219,16 @@ export default function GameManager() {
           winState={winState}
         />
         <Sidebar
-          playerX={playerX}
-          playerO={playerO}
+          playerX={{
+            ...playerX,
+            stonesRemaining: stoneCap(game.size) - countStones(game.board, "X"),
+            stonesTotal: stoneCap(game.size),
+          }}
+          playerO={{
+            ...playerO,
+            stonesRemaining: stoneCap(game.size) - countStones(game.board, "O"),
+            stonesTotal: stoneCap(game.size),
+          }}
           ploys={ploys}
           timeX={timeX}
           timeO={timeO}

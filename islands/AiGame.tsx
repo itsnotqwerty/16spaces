@@ -6,6 +6,7 @@ import {
   applyLocalMove,
   checkWin,
   chooseAiMoveAsync,
+  countStones,
   DEFAULT_BOARD_SIZE,
   DEFAULT_TIME_CONTROL_ID,
   emptyBoard,
@@ -76,7 +77,10 @@ export default function AiGame() {
   const [nowMs, setNowMs] = useState(Date.now());
   const [aiThinking, setAiThinking] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
+  // The step the player is currently viewing in the dialog (browsable).
+  const [tutorialViewStep, setTutorialViewStep] = useState(0);
+  // The highest unlocked step — drives board gating and auto-advance.
+  const [tutorialProgressStep, setTutorialProgressStep] = useState(0);
   const [tutorialPlacedStone, setTutorialPlacedStone] = useState<
     { x: number; y: number } | null
   >(null);
@@ -88,10 +92,21 @@ export default function AiGame() {
   const gameRef = useRef(game);
   // Invalidates in-flight AI computations after a reset or new schedule.
   const aiGeneration = useRef(0);
+  // Transient notice shown when the player is at their stone cap.
+  const [capNoticeVisible, setCapNoticeVisible] = useState(false);
+  const capNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     gameRef.current = game;
   }, [game]);
+
+  const showCapNotice = () => {
+    if (capNoticeTimer.current) {
+      clearTimeout(capNoticeTimer.current);
+    }
+    setCapNoticeVisible(true);
+    capNoticeTimer.current = setTimeout(() => setCapNoticeVisible(false), 2500);
+  };
 
   const centerTargets = (() => {
     const size = game.board.length;
@@ -153,11 +168,13 @@ export default function AiGame() {
   const tutorialHighlights = (() => {
     if (!showTutorial) return [];
 
-    if (tutorialStep === 0) return centerTargets;
-    if (tutorialStep === 1 || tutorialStep === 2) {
+    // Highlights reflect gating progress, not the viewed dialog page, so the
+    // board stays interactive while the player browses earlier instructions.
+    if (tutorialProgressStep === 0) return centerTargets;
+    if (tutorialProgressStep === 1 || tutorialProgressStep === 2) {
       return tutorialPlacedStone ? [tutorialPlacedStone] : [];
     }
-    if (tutorialStep === 3 && tutorialSelectedStone) {
+    if (tutorialProgressStep === 3 && tutorialSelectedStone) {
       return [tutorialSelectedStone, ...getAdjacentLegalTargets(tutorialSelectedStone)];
     }
     return [];
@@ -166,13 +183,13 @@ export default function AiGame() {
   const isTutorialMoveAllowed = (move: Move): boolean => {
     if (!showTutorial) return true;
 
-    if (tutorialStep === 0) {
+    if (tutorialProgressStep === 0) {
       return move.kind === "place" && centerTargets.some(
         ({ x, y }) => x === move.to.x && y === move.to.y,
       );
     }
 
-    if (tutorialStep === 3 && tutorialSelectedStone) {
+    if (tutorialProgressStep === 3 && tutorialSelectedStone) {
       return move.kind === "slide" &&
         move.from.x === tutorialSelectedStone.x &&
         move.from.y === tutorialSelectedStone.y &&
@@ -195,7 +212,8 @@ export default function AiGame() {
     const shouldShow = shouldShowAiTutorial(globalThis.localStorage);
     if (shouldShow) {
       setShowTutorial(true);
-      setTutorialStep(0);
+      setTutorialViewStep(0);
+      setTutorialProgressStep(0);
       markAiTutorialSeen(globalThis.localStorage);
     }
   }, []);
@@ -235,19 +253,36 @@ export default function AiGame() {
     return true;
   };
 
+  // Gating auto-advance: fires only while the player is viewing the frontier
+  // step, so pressing Back never gets yanked forward again by this effect.
   useEffect(() => {
     if (!showTutorial) return;
+    if (tutorialViewStep !== tutorialProgressStep) return;
 
-    if (tutorialStep === 1 && tutorialPlacedStone && game.toMove === humanPlayer) {
-      setTutorialStep(2);
+    if (
+      tutorialProgressStep === 1 && tutorialPlacedStone &&
+      game.toMove === humanPlayer
+    ) {
+      setTutorialProgressStep(2);
+      setTutorialViewStep(2);
     }
 
-    if (tutorialStep === 2 && tutorialSelectedStone &&
+    if (
+      tutorialProgressStep === 2 && tutorialSelectedStone &&
       tutorialSelectedStone.x === tutorialPlacedStone?.x &&
-      tutorialSelectedStone.y === tutorialPlacedStone?.y) {
-      setTutorialStep(3);
+      tutorialSelectedStone.y === tutorialPlacedStone?.y
+    ) {
+      setTutorialProgressStep(3);
+      setTutorialViewStep(3);
     }
-  }, [showTutorial, tutorialStep, game.toMove, tutorialPlacedStone, tutorialSelectedStone]);
+  }, [
+    showTutorial,
+    tutorialViewStep,
+    tutorialProgressStep,
+    game.toMove,
+    tutorialPlacedStone,
+    tutorialSelectedStone,
+  ]);
 
   // Clock tick + flag fall.
   useEffect(() => {
@@ -334,17 +369,19 @@ export default function AiGame() {
       return;
     }
 
-    if (tutorialStep === 0) {
+    if (tutorialProgressStep === 0) {
       setTutorialPlacedStone({ x: move.to.x, y: move.to.y });
       setTutorialSelectedStone(null);
-      setTutorialStep(1);
+      setTutorialProgressStep(1);
+      setTutorialViewStep(1);
       return;
     }
 
-    if (tutorialStep === 3) {
+    if (tutorialProgressStep === 3) {
       setTutorialPlacedStone(null);
       setTutorialSelectedStone(null);
-      setTutorialStep(4);
+      setTutorialProgressStep(4);
+      setTutorialViewStep(4);
       return;
     }
   };
@@ -364,6 +401,18 @@ export default function AiGame() {
     setWinningLine(null);
     setAiThinking(false);
     setNowMs(Date.now());
+    if (capNoticeTimer.current) {
+      clearTimeout(capNoticeTimer.current);
+      capNoticeTimer.current = null;
+    }
+    setCapNoticeVisible(false);
+    // Restart the tutorial gating with the fresh game.
+    if (showTutorial) {
+      setTutorialProgressStep(0);
+      setTutorialViewStep(0);
+      setTutorialPlacedStone(null);
+      setTutorialSelectedStone(null);
+    }
   };
 
   const displayTimeSeconds = (player: Player): number => {
@@ -393,21 +442,21 @@ export default function AiGame() {
               Quick tutorial
             </span>
             <span>
-              {Math.min(tutorialStep + 1, tutorialSteps.length)}/{tutorialSteps.length}
+              {Math.min(tutorialViewStep + 1, tutorialSteps.length)}/{tutorialSteps.length}
             </span>
           </div>
           <h2 class="mt-2 text-xl font-bold text-white">
-            {tutorialSteps[Math.min(tutorialStep, tutorialSteps.length - 1)].title}
+            {tutorialSteps[Math.min(tutorialViewStep, tutorialSteps.length - 1)].title}
           </h2>
           <p class="mt-2 text-sm leading-6 text-gray-200">
-            {tutorialSteps[Math.min(tutorialStep, tutorialSteps.length - 1)].text}
+            {tutorialSteps[Math.min(tutorialViewStep, tutorialSteps.length - 1)].text}
           </p>
           <div class="mt-3 flex justify-end gap-2">
-            {tutorialStep > 0 && tutorialStep < tutorialSteps.length - 1 && (
+            {tutorialViewStep > 0 && (
               <button
                 type="button"
                 class="rounded border border-white/20 px-3 py-2 text-white hover:bg-white/5"
-                onClick={() => setTutorialStep((current) => Math.max(0, current - 1))}
+                onClick={() => setTutorialViewStep((current) => Math.max(0, current - 1))}
               >
                 Back
               </button>
@@ -416,17 +465,17 @@ export default function AiGame() {
               type="button"
               class="rounded bg-yellow-400 px-3 py-2 font-semibold text-black hover:bg-yellow-300"
               onClick={() => {
-                if (tutorialStep === tutorialSteps.length - 1) {
+                if (tutorialViewStep === tutorialSteps.length - 1) {
                   closeTutorial();
                   return;
                 }
 
-                if (tutorialStep < tutorialSteps.length - 1) {
-                  setTutorialStep((current) => current + 1);
+                if (tutorialViewStep < tutorialSteps.length - 1) {
+                  setTutorialViewStep((current) => current + 1);
                 }
               }}
             >
-              {tutorialStep === tutorialSteps.length - 1 ? "Start playing" : "Next"}
+              {tutorialViewStep === tutorialSteps.length - 1 ? "Start playing" : "Next"}
             </button>
           </div>
         </div>
@@ -497,7 +546,15 @@ export default function AiGame() {
         )}
       </div>
 
-      <div class="flex flex-col sm:flex-row justify-center items-start sm:space-x-4 w-full">
+      <div class="relative flex flex-col sm:flex-row justify-center items-start sm:space-x-4 w-full">
+        {capNoticeVisible && (
+          <div
+            role="status"
+            class="absolute left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/15 bg-[#23211d]/95 px-5 py-3 text-sm text-gray-100 shadow-xl shadow-black/40 backdrop-blur sm:left-[calc(50%-9rem)]"
+          >
+            You have already placed all your stones.
+          </div>
+        )}
         <Board
           board={game.board}
           currentPlayer={game.toMove}
@@ -506,6 +563,7 @@ export default function AiGame() {
           onReset={handleReset}
           winState={winState}
           tutorialTargets={tutorialHighlights}
+          onStoneCapHit={showCapNotice}
           onSelectionChange={(coord) => {
             if (!showTutorial) return;
 
@@ -514,12 +572,11 @@ export default function AiGame() {
               return;
             }
 
-            if (tutorialStep === 2 &&
+            if (tutorialProgressStep === 2 &&
               tutorialPlacedStone &&
               coord.x === tutorialPlacedStone.x &&
               coord.y === tutorialPlacedStone.y) {
               setTutorialSelectedStone(coord);
-              setTutorialStep(3);
             }
           }}
         />
@@ -528,11 +585,15 @@ export default function AiGame() {
             name: humanPlayer === "X" ? "You" : `AI (level ${difficulty})`,
             elo: 0,
             isConnected: true,
+            stonesRemaining: stoneCap(game.size) - countStones(game.board, "X"),
+            stonesTotal: stoneCap(game.size),
           }}
           playerO={{
             name: aiPlayer === "O" ? `AI (level ${difficulty})` : "You",
             elo: 0,
             isConnected: true,
+            stonesRemaining: stoneCap(game.size) - countStones(game.board, "O"),
+            stonesTotal: stoneCap(game.size),
           }}
           ploys={ploys}
           timeX={displayTimeSeconds("X")}
