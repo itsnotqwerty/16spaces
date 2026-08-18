@@ -20,6 +20,7 @@ export type LobbyOptions = {
   rated: boolean;
   timeControlId: string;
   colorAssignment: ColorAssignment;
+  boardSize: number;
 };
 
 export type Lobby = {
@@ -42,6 +43,7 @@ export type LobbyUserContext = {
 };
 
 export type CreateLobbyInput = {
+  boardSize?: number;
   privacy?: LobbyPrivacy;
   rated?: boolean;
   timeControlId?: string;
@@ -208,6 +210,7 @@ export function createLobby(
     privacy: input.privacy === "public" ? "public" : "private",
     status: "open",
     options: {
+      boardSize: input.boardSize || 4,
       rated,
       timeControlId,
       colorAssignment: input.colorAssignment ?? "random",

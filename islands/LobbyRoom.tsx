@@ -14,6 +14,7 @@ type Lobby = {
   status: "open" | "started" | "cancelled" | "expired";
   options: {
     rated: boolean;
+    boardSize: number;
     timeControlId: string;
     colorAssignment: "random" | "host_x" | "host_o";
   };
@@ -170,6 +171,7 @@ export default function LobbyRoom(
         <div class="text-sm text-gray-300 text-right">
           <p>
             {lobby?.options.timeControlId} ·{" "}
+            {lobby?.options.boardSize} {" "}
             {lobby?.options.rated ? "Rated" : "Casual"}
           </p>
           <p>{lobby?.privacy}</p>

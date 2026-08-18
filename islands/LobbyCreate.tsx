@@ -23,6 +23,7 @@ export default function LobbyCreate() {
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({
+          boardSize,
           privacy,
           rated,
           timeControlId,
