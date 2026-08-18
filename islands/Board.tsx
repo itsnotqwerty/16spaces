@@ -14,6 +14,8 @@ type BoardProps = {
   onIntent: (move: Move) => void;
   onReset?: () => void;
   winState: Player | null;
+  tutorialTargets?: Array<{ x: number; y: number }>;
+  onSelectionChange?: (coord: { x: number; y: number } | null) => void;
 };
 
 export default function Board(props: BoardProps) {
@@ -30,23 +32,27 @@ export default function Board(props: BoardProps) {
       // Deselect the currently selected stone if clicked again
       if (selectedStone.x === x && selectedStone.y === y) {
         setSelectedStone(null);
+        props.onSelectionChange?.(null);
         return;
       }
 
       if (cell === props.currentPlayer) {
         setSelectedStone({ x, y });
+        props.onSelectionChange?.({ x, y });
         return;
       }
 
       if (cell === null && isAdjacent(selectedStone, { x, y })) {
         props.onIntent({ kind: "slide", from: selectedStone, to: { x, y } });
         setSelectedStone(null);
+        props.onSelectionChange?.(null);
       }
     } else {
       if (cell === null) {
         props.onIntent({ kind: "place", to: { x, y } });
       } else if (cell === props.currentPlayer) {
         setSelectedStone({ x, y });
+        props.onSelectionChange?.({ x, y });
       }
     }
   };
@@ -60,6 +66,10 @@ export default function Board(props: BoardProps) {
   const toggleRules = () => {
     setRulesShowing(!rulesShowing);
   };
+
+  const tutorialTargetSet = new Set(
+    (props.tutorialTargets ?? []).map(({ x, y }) => `${x}:${y}`),
+  );
 
   const size = props.board.length;
   const gridCols = `2rem repeat(${size}, minmax(0, 1fr))`;
@@ -108,6 +118,7 @@ export default function Board(props: BoardProps) {
                 isWinning={props.winningLine?.some(([wx, wy]) =>
                   wx === x && wy === y
                 ) || false}
+                isTutorialTarget={tutorialTargetSet.has(`${x}:${y}`)}
                 onClick={() => handleCellClick(x, y)}
               />
             ))}
