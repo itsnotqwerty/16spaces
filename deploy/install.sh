@@ -236,18 +236,6 @@ server {
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
     }
-
-    location = /favicon.ico {
-        alias ${project_dir}/static/favicon.ico;
-        access_log off;
-        log_not_found off;
-    }
-
-    location /static/ {
-        alias ${project_dir}/static/;
-        expires 1h;
-        add_header Cache-Control "public, max-age=3600";
-    }
 }
 EOF
 fi
