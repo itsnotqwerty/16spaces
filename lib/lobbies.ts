@@ -1,6 +1,5 @@
 import { TIME_CONTROLS } from "./game/index.ts";
 import { createGameSession, getGameById } from "./games.ts";
-import { getUserTicket } from "./matchmaking.ts";
 import { isPlaceholderUsername } from "./username.ts";
 import { supabaseAdmin } from "./supabase.ts";
 

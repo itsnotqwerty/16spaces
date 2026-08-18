@@ -24,6 +24,7 @@ export type GameMoveRecord = {
 
 export type GameSession = {
   gameId: string;
+  boardSize: number;
   /** Matchmaking match id, or null for lobby games. */
   matchId: string | null;
   rated: boolean;
@@ -178,6 +179,7 @@ export function createGameSession(input: CreateGameInput): string {
   const session: GameSession = {
     gameId: createId("game"),
     matchId: input.matchId,
+    boardSize: input.boardSize || 4,
     rated: input.rated,
     timeControlId: input.timeControlId,
     playerXId: input.playerXId,

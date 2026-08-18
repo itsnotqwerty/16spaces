@@ -46,6 +46,7 @@ export const handler: Handlers<unknown, AppState> = {
       game: {
         gameId: session.gameId,
         matchId: session.matchId,
+        boardSize: session.boardSize,
         rated: session.rated,
         timeControlId: session.timeControlId,
         yourPlayer,

@@ -6,7 +6,7 @@ import {
   type GameSnapshot,
   type Move as GameMove,
   type Player,
-  remainingMs,
+  remainingMs
 } from "../lib/game/index.ts";
 
 type GameMoveRecord = {
@@ -19,6 +19,7 @@ type GameStateResponse = {
   ok: boolean;
   game?: {
     gameId: string;
+    boardSize: number;
     rated: boolean;
     timeControlId: string;
     yourPlayer: Player;
@@ -58,7 +59,7 @@ function movesToPloys(moves: GameMoveRecord[]): Ploy[] {
 }
 
 export default function OnlineGame({ gameId }: { gameId: string }) {
-  const [game, setGame] = useState<GameStateResponse["game"] | null>(null);
+  const [game, setGame] = useState<GameStateResponse["game"] | null>();
   const [error, setError] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(Date.now());
   const [resigning, setResigning] = useState(false);
