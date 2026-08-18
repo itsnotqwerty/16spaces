@@ -1,7 +1,7 @@
 import { Handlers } from "$fresh/server.ts";
 import { setAuthCookies } from "../../../lib/auth_cookies.ts";
 import { flag } from "../../../lib/flags.ts";
-import { supabaseAnon } from "../../../lib/supabase.ts";
+import { supabaseAdmin, supabaseAnon } from "../../../lib/supabase.ts";
 import { normalizeUsername, validateUsername } from "../../../lib/username.ts";
 
 export const handler: Handlers = {
@@ -48,6 +48,22 @@ export const handler: Handlers = {
           code: "signup_failed",
         },
         { status: 400 },
+      );
+    }
+
+    // Record the username on the profiles table so login-by-username can
+    // resolve it. (The on_auth_user_created trigger is a later migration.)
+    const { error: profileError } = await supabaseAdmin()
+      .from("profiles")
+      .upsert(
+        { id: data.user.id, username: normalizedUsername },
+        { onConflict: "id" },
+      );
+
+    if (profileError) {
+      return Response.json(
+        { error: "That username is taken.", code: "username_taken" },
+        { status: 409 },
       );
     }
 

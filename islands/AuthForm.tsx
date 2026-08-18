@@ -8,13 +8,14 @@ type AuthFormProps = {
 
 export default function AuthForm({ mode }: AuthFormProps) {
   const isSignup = mode === "signup";
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/signup";
+  const identifierIsEmail = /^[^@\s]+@[^@\s]+$/.test(identifier.trim());
 
   async function finalizeSession(messageText: string) {
     const sessionResponse = await fetch("/api/auth/session", {
@@ -41,7 +42,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          isSignup ? { email, password, username } : { email, password },
+          isSignup ? { email: identifier, password, username } : { identifier, password },
         ),
       });
 
@@ -66,7 +67,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const response = await fetch("/api/auth/magic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: identifier }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -122,12 +123,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
       )}
 
       <div>
-        <label class="block text-sm text-gray-300 mb-1" for="email">Email</label>
+        <label class="block text-sm text-gray-300 mb-1" for="identifier">
+          {isSignup ? "Email" : "Email or username"}
+        </label>
         <input
-          id="email"
-          type="email"
-          value={email}
-          onInput={(e) => setEmail((e.currentTarget as HTMLInputElement).value)}
+          id="identifier"
+          type="text"
+          autoComplete={isSignup ? "email" : "username"}
+          value={identifier}
+          onInput={(e) => setIdentifier((e.currentTarget as HTMLInputElement).value)}
           class="w-full px-3 py-2 rounded bg-[#23211d] border border-white/20 text-white"
         />
       </div>
@@ -158,11 +162,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <button
             type="button"
             onClick={sendMagicLink}
-            disabled={isSubmitting || !email}
+            disabled={isSubmitting || !identifierIsEmail}
             class="w-full px-3 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-60"
           >
             Send magic link
           </button>
+          {!identifierIsEmail && identifier.trim() && (
+            <p class="text-xs text-gray-400">
+              Magic links need your email address.
+            </p>
+          )}
           <button
             type="button"
             onClick={signInAsGuest}

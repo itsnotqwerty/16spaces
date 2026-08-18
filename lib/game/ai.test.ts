@@ -138,6 +138,19 @@ Deno.test("delays stay within 3-8s bounds for every level", () => {
   }
 });
 
+Deno.test("delay is capped on low remaining time to avoid stalling", () => {
+  for (const level of [1, 2, 3, 4, 5] as const) {
+    // 2s left: cap is 2s/5 - 100ms = 300ms, so delay must be small.
+    const low = pickDelayMs(level, 2000, () => 0.999);
+    assert(low <= 300, `level ${level} delay ${low} should be capped low`);
+    assert(low >= 200, `level ${level} delay ${low} keeps minimum think time`);
+
+    // Plenty of time: full window applies.
+    const plenty = pickDelayMs(level, 300_000, () => 0.999);
+    assert(plenty >= 3000);
+  }
+});
+
 Deno.test("async ai takes an immediate win at high difficulty", async () => {
   // X has three in column 0 and can win by placing at (0,3).
   const board = boardWith([[0, 0, "X"], [0, 1, "X"], [0, 2, "X"], [3, 3, "O"]]);
