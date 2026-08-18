@@ -369,6 +369,7 @@ export function startLobby(
     matchId: null,
     rated: lobby.options.rated,
     timeControlId: lobby.options.timeControlId,
+    boardSize: lobby.options.boardSize,
     playerXId: hostIsX ? host.userId : guest.userId,
     playerOId: hostIsX ? guest.userId : host.userId,
   });
