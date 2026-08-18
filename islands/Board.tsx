@@ -137,20 +137,20 @@ export default function Board(props: BoardProps) {
           <h2 class="text-lg font-bold mb-2">Game Rules:</h2>
           <ul class="list-disc list-inside">
             <li>
-              Players take turns placing or moving their stones on the 4x4
-              board.
+              Players take turns placing or moving their stones on the
+              board (default 4x4).
             </li>
             <li>
-              Each player can have a maximum of 5 stones on the board at any
-              time.
+              Each player has a maximum number of stones that they can place
+              (default 5).
             </li>
             <li>
               To place a stone, click on an empty space. To move a stone, click
               on your stone and then on an adjacent empty space.
             </li>
             <li>
-              The first player to align 4 of their stones horizontally,
-              vertically, or diagonally wins the game.
+              The first player to align their stones horizontally,
+              vertically, or diagonally across the board wins the game.
             </li>
             <li>If a player's time runs out, their opponent wins the game.</li>
           </ul>
