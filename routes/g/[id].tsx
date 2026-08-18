@@ -18,7 +18,7 @@ export const handler: Handlers<unknown, AppState> = {
 export default function GamePage(props: PageProps) {
   return (
     <Layout isAuthenticated>
-      <div class="space-y-4">
+      <div class="space-y-4 w-full">
         <h1 class="text-3xl font-bold">Match</h1>
         <div class="flex items-center justify-center sm:justify-start">
           <OnlineGame gameId={props.params.id} />
