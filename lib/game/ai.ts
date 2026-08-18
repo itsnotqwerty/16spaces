@@ -163,7 +163,15 @@ function findStrongestBlock(board: Board, player: Player): Move | null {
   const opponentWin = findImmediateWin(board, opponent);
   if (!opponentWin) return null;
 
-  for (const move of legalMoves(board, player)) {
+  // The only way to stop the opponent's threat is to occupy the square their
+  // winning move targets (placing on it or sliding onto it). Filtering to
+  // those candidates avoids an O(moves^2) scan, which matters on large boards.
+  const target = opponentWin.to;
+  const candidates = legalMoves(board, player).filter((move) =>
+    move.to.x === target.x && move.to.y === target.y
+  );
+
+  for (const move of candidates) {
     const next = applyMove(board, player, move);
     if (!findImmediateWin(next, opponent)) {
       return move;
@@ -173,6 +181,54 @@ function findStrongestBlock(board: Board, player: Player): Move | null {
   return legalMoves(board, player)[0] ?? null;
 }
 
+/** Thrown when the search exceeds its wall-clock deadline. */
+class SearchAborted extends Error {}
+
+type SearchContext = {
+  /** performance.now() timestamp after which the search must stop. */
+  deadline: number;
+  /** Nodes visited since the search started; deadline is checked periodically. */
+  nodes: number;
+};
+
+/**
+ * Wall-clock budget for a single AI move. Larger boards get a smaller budget
+ * because their branching factor makes deep search exponentially pricier —
+ * this is what keeps 7x7-9x9 games responsive.
+ */
+export function searchBudgetMs(difficulty: AiDifficulty, size: number): number {
+  const base = [0, 250, 400, 700, 1200, 2000][difficulty];
+  const sizeFactor = size <= 5 ? 1 : size <= 7 ? 0.5 : 0.3;
+  return Math.max(120, Math.round(base * sizeFactor));
+}
+
+function newSearchContext(budgetMs: number): SearchContext {
+  return { deadline: performance.now() + budgetMs, nodes: 0 };
+}
+
+function checkSearchBudget(ctx: SearchContext): void {
+  // Cheap node counter gate so performance.now() is sampled rarely.
+  if ((++ctx.nodes & 0x7f) === 0 && performance.now() > ctx.deadline) {
+    throw new SearchAborted();
+  }
+}
+
+/** Orders moves so alpha-beta prunes early: central, aggressive moves first. */
+function orderedMoves(board: Board, player: Player): Move[] {
+  const moves = legalMoves(board, player);
+  const bitmap = positionalBitmap(boardSize(board));
+  const score = (move: Move): number => {
+    const to = bitmap[move.to.x][move.to.y];
+    return move.kind === "slide"
+      ? to - bitmap[move.from.x][move.from.y] * 0.5
+      : to;
+  };
+  return moves
+    .map((move) => ({ move, score: score(move) }))
+    .sort((a, b) => b.score - a.score)
+    .map(({ move }) => move);
+}
+
 function negamax(
   board: Board,
   toMove: Player,
@@ -180,7 +236,10 @@ function negamax(
   depth: number,
   alpha: number,
   beta: number,
+  ctx: SearchContext,
 ): number {
+  checkSearchBudget(ctx);
+
   const win = checkWin(board);
   if (win) {
     return win.winner === root ? 1_000_000 + depth : -1_000_000 - depth;
@@ -189,7 +248,7 @@ function negamax(
     return evaluate(board, root);
   }
 
-  const moves = legalMoves(board, toMove);
+  const moves = orderedMoves(board, toMove);
   if (moves.length === 0) {
     return toMove === root ? 1_000_000 + depth : -1_000_000 - depth;
   }
@@ -203,6 +262,7 @@ function negamax(
       depth - 1,
       -beta,
       -alpha,
+      ctx,
     );
     if (score > best) best = score;
     if (best > alpha) alpha = best;
@@ -211,9 +271,132 @@ function negamax(
   return best;
 }
 
+type RootSearchResult = { move: Move; score: number };
+
+/** One iterative-deepening pass over the root moves (synchronous). */
+function searchRoot(
+  board: Board,
+  player: Player,
+  moves: Move[],
+  depth: number,
+  ctx: SearchContext,
+  random: () => number,
+): RootSearchResult {
+  let best = moves[0];
+  let bestScore = -Infinity;
+  let alpha = -Infinity;
+  for (const move of moves) {
+    const score = -negamax(
+      applyMove(board, player, move),
+      other(player),
+      player,
+      depth - 1,
+      -Infinity,
+      -alpha,
+      ctx,
+    );
+    // Deterministic tie-break jitter keeps equal moves varied.
+    const jittered = score + random() * 0.5;
+    if (jittered > bestScore) {
+      bestScore = jittered;
+      best = move;
+    }
+    if (score > alpha) alpha = score;
+  }
+  return { move: best, score: bestScore };
+}
+
+/** Same as searchRoot but yields to the event loop between root moves. */
+async function searchRootAsync(
+  board: Board,
+  player: Player,
+  moves: Move[],
+  depth: number,
+  ctx: SearchContext,
+  random: () => number,
+  yieldFn: () => Promise<void>,
+): Promise<RootSearchResult> {
+  let best = moves[0];
+  let bestScore = -Infinity;
+  let alpha = -Infinity;
+  for (let i = 0; i < moves.length; i++) {
+    const move = moves[i];
+    const score = -negamax(
+      applyMove(board, player, move),
+      other(player),
+      player,
+      depth - 1,
+      -Infinity,
+      -alpha,
+      ctx,
+    );
+    const jittered = score + random() * 0.5;
+    if (jittered > bestScore) {
+      bestScore = jittered;
+      best = move;
+    }
+    if (score > alpha) alpha = score;
+    if ((i & 3) === 3) {
+      await yieldFn();
+    }
+  }
+  return { move: best, score: bestScore };
+}
+
+type PreparedSearch = {
+  moves: Move[];
+  params: AiParams;
+  ctx: SearchContext;
+};
+
+/**
+ * Handles the cheap tactical shortcuts (immediate win, forced block, random
+ * play) and returns the ordered root moves plus a deadline-budgeted search
+ * context when a real search is needed.
+ */
+function prepareSearch(
+  board: Board,
+  player: Player,
+  difficulty: AiDifficulty,
+  random: () => number,
+): { kind: "move"; move: Move | null } | { kind: "search"; search: PreparedSearch } {
+  const moves = legalMoves(board, player);
+  if (moves.length === 0) {
+    return { kind: "move", move: null };
+  }
+
+  const params = AI_LEVELS[difficulty];
+
+  const immediateWin = findImmediateWin(board, player);
+  if (immediateWin) return { kind: "move", move: immediateWin };
+
+  const blockingMove = findStrongestBlock(board, player);
+  if (blockingMove) return { kind: "move", move: blockingMove };
+
+  if (random() < params.randomness) {
+    return {
+      kind: "move",
+      move: moves[Math.floor(random() * moves.length)],
+    };
+  }
+
+  return {
+    kind: "search",
+    search: {
+      moves: orderedMoves(board, player),
+      params,
+      ctx: newSearchContext(searchBudgetMs(difficulty, boardSize(board))),
+    },
+  };
+}
+
 /**
  * Chooses a move for `player`. Returns null when no legal move exists.
  * Difficulty blends uniform-random play with depth-limited negamax.
+ *
+ * The search uses iterative deepening under a wall-clock budget
+ * (see searchBudgetMs): it returns the best move from the last fully
+ * completed depth, so it stays fast even on large boards.
  */
 export function chooseAiMove(
   board: Board,
@@ -221,39 +404,60 @@ export function chooseAiMove(
   difficulty: AiDifficulty,
   random: () => number = Math.random,
 ): Move | null {
-  const moves = legalMoves(board, player);
-  if (moves.length === 0) {
-    return null;
+  const prepared = prepareSearch(board, player, difficulty, random);
+  if (prepared.kind === "move") {
+    return prepared.move;
   }
+  const { moves, params, ctx } = prepared.search;
 
-  const params = AI_LEVELS[difficulty];
-
-  const immediateWin = findImmediateWin(board, player);
-  if (immediateWin) return immediateWin;
-
-  const blockingMove = findStrongestBlock(board, player);
-  if (blockingMove) return blockingMove;
-
-  if (random() < params.randomness) {
-    return moves[Math.floor(random() * moves.length)];
+  let best = moves[0];
+  for (let depth = 1; depth <= params.depth; depth++) {
+    try {
+      best = searchRoot(board, player, moves, depth, ctx, random).move;
+    } catch (error) {
+      if (error instanceof SearchAborted) break;
+      throw error;
+    }
   }
+  return best;
+}
 
-  let best: Move = moves[0];
-  let bestScore = -Infinity;
-  for (const move of moves) {
-    const score = -negamax(
-      applyMove(board, player, move),
-      other(player),
-      player,
-      params.depth - 1,
-      -Infinity,
-      Infinity,
-    );
-    // Deterministic tie-break jitter keeps equal moves varied.
-    const jitter = random() * 0.5;
-    if (score + jitter > bestScore) {
-      bestScore = score + jitter;
-      best = move;
+const defaultYield = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
+ * Async variant of chooseAiMove for UI contexts: identical move selection,
+ * but it yields to the event loop between root moves so timers and rendering
+ * keep running while the AI thinks.
+ */
+export async function chooseAiMoveAsync(
+  board: Board,
+  player: Player,
+  difficulty: AiDifficulty,
+  random: () => number = Math.random,
+  yieldFn: () => Promise<void> = defaultYield,
+): Promise<Move | null> {
+  const prepared = prepareSearch(board, player, difficulty, random);
+  if (prepared.kind === "move") {
+    return prepared.move;
+  }
+  const { moves, params, ctx } = prepared.search;
+
+  let best = moves[0];
+  for (let depth = 1; depth <= params.depth; depth++) {
+    try {
+      best = (await searchRootAsync(
+        board,
+        player,
+        moves,
+        depth,
+        ctx,
+        random,
+        yieldFn,
+      )).move;
+    } catch (error) {
+      if (error instanceof SearchAborted) break;
+      throw error;
     }
   }
   return best;

@@ -1,6 +1,13 @@
 import { assert, assertEquals } from "$std/assert/mod.ts";
 import { emptyBoard } from "./board.ts";
-import { AI_LEVELS, chooseAiMove, pickDelayMs, positionalBitmap } from "./ai.ts";
+import {
+  AI_LEVELS,
+  chooseAiMove,
+  chooseAiMoveAsync,
+  pickDelayMs,
+  positionalBitmap,
+  searchBudgetMs,
+} from "./ai.ts";
 import { legalMoves } from "./rules.ts";
 import type { Board, Move } from "./types.ts";
 
@@ -129,4 +136,45 @@ Deno.test("delays stay within 3-8s bounds for every level", () => {
       assert(delay >= minDelayMs && delay <= maxDelayMs);
     }
   }
+});
+
+Deno.test("async ai takes an immediate win at high difficulty", async () => {
+  // X has three in column 0 and can win by placing at (0,3).
+  const board = boardWith([[0, 0, "X"], [0, 1, "X"], [0, 2, "X"], [3, 3, "O"]]);
+  const move = await chooseAiMoveAsync(board, "X", 5, () => 0.99);
+  assertEquals(move, { kind: "place", to: { x: 0, y: 3 } });
+});
+
+Deno.test("async ai yields to the event loop during search", async () => {
+  const board = emptyBoard(6);
+  board[2][2] = "X";
+  board[3][3] = "O";
+  let yields = 0;
+  const move = await chooseAiMoveAsync(board, "X", 5, () => 0.99, () => {
+    yields++;
+    return Promise.resolve();
+  });
+  assert(move && isLegal(board, move, "X"));
+  assert(yields > 0, "search should yield between root moves");
+});
+
+Deno.test("search budget shrinks on larger boards", () => {
+  for (const level of [1, 2, 3, 4, 5] as const) {
+    assert(searchBudgetMs(level, 9) <= searchBudgetMs(level, 4));
+    assert(searchBudgetMs(level, 4) >= 120);
+  }
+});
+
+Deno.test("ai stays responsive on the largest board", async () => {
+  const size = 9;
+  const board = emptyBoard(size);
+  board[4][4] = "X";
+  board[3][3] = "O";
+  board[4][3] = "X";
+  const start = performance.now();
+  const move = await chooseAiMoveAsync(board, "O", 5, () => 0.99);
+  const elapsed = performance.now() - start;
+  assert(move && isLegal(board, move, "O"));
+  // Level-5 budget on 9x9 is 600ms; allow generous slack for CI machines.
+  assert(elapsed < 3000, `search took ${elapsed}ms on a 9x9 board`);
 });

@@ -5,7 +5,7 @@ import {
   type AiDifficulty,
   applyLocalMove,
   checkWin,
-  chooseAiMove,
+  chooseAiMoveAsync,
   DEFAULT_BOARD_SIZE,
   DEFAULT_TIME_CONTROL_ID,
   emptyBoard,
@@ -84,6 +84,14 @@ export default function AiGame() {
     { x: number; y: number } | null
   >(null);
   const aiTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Mirrors the latest game state so async AI work reads a fresh snapshot.
+  const gameRef = useRef(game);
+  // Invalidates in-flight AI computations after a reset or new schedule.
+  const aiGeneration = useRef(0);
+
+  useEffect(() => {
+    gameRef.current = game;
+  }, [game]);
 
   const centerTargets = (() => {
     const size = game.board.length;
@@ -258,26 +266,50 @@ export default function AiGame() {
       return;
     }
 
+    const generation = ++aiGeneration.current;
     setAiThinking(true);
-    const delay = pickDelayMs(difficulty);
+    // Cap the think delay by the AI's remaining clock so it never stalls out
+    // low-time games.
+    const aiRemaining = remainingMs(
+      aiPlayer === "X" ? game.clock.remainingMsX : game.clock.remainingMsO,
+      game.clock.turnStartedAt,
+      game.toMove,
+      aiPlayer,
+      new Date(),
+    );
+    const delay = pickDelayMs(difficulty, aiRemaining);
     aiTimer.current = setTimeout(() => {
-      setGame((current) => {
+      void (async () => {
+        const current = gameRef.current;
         if (current.terminal || current.toMove !== aiPlayer) {
-          return current;
+          return;
         }
-        const move = chooseAiMove(current.board, aiPlayer, difficulty);
-        if (!move) {
-          return current;
+        // The async search yields to the event loop between root moves, so
+        // the clock tick and rendering keep running while the AI thinks.
+        const move = await chooseAiMoveAsync(
+          current.board,
+          aiPlayer,
+          difficulty,
+        );
+        if (aiGeneration.current !== generation || !move) {
+          return;
         }
-        const result = applyLocalMove(current, move, new Date());
-        if (!result.ok) {
-          return result.error === "flag_fell" ? result.snapshot : current;
+        setGame((latest) => {
+          if (latest.terminal || latest.toMove !== aiPlayer) {
+            return latest;
+          }
+          const result = applyLocalMove(latest, move, new Date());
+          if (!result.ok) {
+            return result.error === "flag_fell" ? result.snapshot : latest;
+          }
+          appendPloy(aiPlayer, result.notation);
+          setWinningLine(checkWin(result.snapshot.board)?.line ?? null);
+          return result.snapshot;
+        });
+        if (aiGeneration.current === generation) {
+          setAiThinking(false);
         }
-        appendPloy(aiPlayer, result.notation);
-        setWinningLine(checkWin(result.snapshot.board)?.line ?? null);
-        setAiThinking(false);
-        return result.snapshot;
-      });
+      })();
     }, delay);
 
     return () => {
@@ -325,6 +357,8 @@ export default function AiGame() {
       clearTimeout(aiTimer.current);
       aiTimer.current = null;
     }
+    // Invalidate any in-flight AI computation from the previous game.
+    aiGeneration.current++;
     setGame(createInitialSnapshot(nextTimeControlId, nextSize));
     setPloys([]);
     setWinningLine(null);
