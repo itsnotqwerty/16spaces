@@ -60,11 +60,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
               <span class="text-2xl font-bold mx-2">X</span> {playerX.name} ({playerX.elo})
             </div>
           </div>
-          <div class={`flex flex-row text-xl font-bold ${ timeX < 30 ? "text-red-600" : "text-gray-600" }`}>
+          <div class={`flex flex-row text-xl font-bold ${ timeX < 30 ? "text-red-600" : "text-gray-900" }`}>
             {formatTime(timeX)}
           </div>
           {playerX.stonesRemaining !== undefined && playerX.stonesTotal !== undefined && (
-            <div class="text-xs font-bold text-gray-600">
+            <div class="text-sm font-bold text-gray-900">
               Remaining Stones: {playerX.stonesRemaining}/{playerX.stonesTotal}
             </div>
           )}
@@ -82,11 +82,11 @@ export default function Sidebar({ playerX, playerO, ploys, timeX, timeO, winStat
               <span class="text-2xl font-bold mx-2">O</span> {playerO.name} ({playerO.elo})
             </div>
           </div>
-          <div class={`flex flex-row text-xl font-bold ${ timeO < 30 ? "text-red-600" : "text-gray-600" }`}>
+          <div class={`flex flex-row text-xl font-bold ${ timeO < 30 ? "text-red-600" : "text-gray-900" }`}>
             {formatTime(timeO)}
           </div>
           {playerO.stonesRemaining !== undefined && playerO.stonesTotal !== undefined && (
-            <div class="text-xs font-bold text-gray-600">
+            <div class="text-sm font-bold text-gray-900">
               Remaining Stones: {playerO.stonesRemaining}/{playerO.stonesTotal}
             </div>
           )}
