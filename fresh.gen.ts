@@ -32,6 +32,7 @@ import * as $g_id_ from "./routes/g/[id].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $l_code_ from "./routes/l/[code].tsx";
 import * as $l_new from "./routes/l/new.tsx";
+import * as $l_public from "./routes/l/public.tsx";
 import * as $leaderboard from "./routes/leaderboard.tsx";
 import * as $local from "./routes/local.tsx";
 import * as $login from "./routes/login.tsx";
@@ -45,6 +46,7 @@ import * as $GameManager from "./islands/GameManager.tsx";
 import * as $HomeMenu from "./islands/HomeMenu.tsx";
 import * as $LobbyCreate from "./islands/LobbyCreate.tsx";
 import * as $LobbyRoom from "./islands/LobbyRoom.tsx";
+import * as $LobbyViewer from "./islands/LobbyViewer.tsx";
 import * as $LogoutButton from "./islands/LogoutButton.tsx";
 import * as $OnlineGame from "./islands/OnlineGame.tsx";
 import * as $QueueWait from "./islands/QueueWait.tsx";
@@ -84,6 +86,7 @@ const manifest = {
     "./routes/index.tsx": $index,
     "./routes/l/[code].tsx": $l_code_,
     "./routes/l/new.tsx": $l_new,
+    "./routes/l/public.tsx": $l_public,
     "./routes/leaderboard.tsx": $leaderboard,
     "./routes/local.tsx": $local,
     "./routes/login.tsx": $login,
@@ -99,6 +102,7 @@ const manifest = {
     "./islands/HomeMenu.tsx": $HomeMenu,
     "./islands/LobbyCreate.tsx": $LobbyCreate,
     "./islands/LobbyRoom.tsx": $LobbyRoom,
+    "./islands/LobbyViewer.tsx": $LobbyViewer,
     "./islands/LogoutButton.tsx": $LogoutButton,
     "./islands/OnlineGame.tsx": $OnlineGame,
     "./islands/QueueWait.tsx": $QueueWait,

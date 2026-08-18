@@ -60,7 +60,7 @@ export default function LobbyCreate() {
 
       <label class="block space-y-1">
         <span class="text-xs text-gray-300">Board size</span>
-        <Dropdown id="ai-board-size-select"
+        <Dropdown id="online-board-size-select"
             value={String(boardSize)}
             options={Array.from(
                 { length: MAX_BOARD_SIZE - MIN_BOARD_SIZE + 1 },

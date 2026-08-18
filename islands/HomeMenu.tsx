@@ -60,6 +60,11 @@ export default function HomeMenu() {
         label="Create Lobby"
         description="Create a private or public room and share the code with a friend."
       />
+      <MenuButton
+        href="/l/public"
+        label="Browse Lobbies"
+        description="View public rooms that are available to join"
+      />
     </section>
   );
 }
