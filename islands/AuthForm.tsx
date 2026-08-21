@@ -82,6 +82,29 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
+  async function sendPasswordReset() {
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/auth/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: identifier }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.error ?? "Password reset failed.");
+      } else {
+        setMessage("Password reset email sent. Check your inbox.");
+      }
+    } catch {
+      setMessage("Password reset failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   async function signInAsGuest() {
     setIsSubmitting(true);
     setMessage(null);
@@ -172,6 +195,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
               Magic links need your email address.
             </p>
           )}
+          <button
+            type="button"
+            onClick={sendPasswordReset}
+            disabled={isSubmitting || !identifierIsEmail}
+            class="w-full px-3 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-60"
+          >
+            Forgot password? Email a reset link
+          </button>
           <button
             type="button"
             onClick={signInAsGuest}

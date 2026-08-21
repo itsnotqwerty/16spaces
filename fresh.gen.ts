@@ -11,6 +11,8 @@ import * as $api_auth_guest from "./routes/api/auth/guest.ts";
 import * as $api_auth_login from "./routes/api/auth/login.ts";
 import * as $api_auth_logout from "./routes/api/auth/logout.ts";
 import * as $api_auth_magic from "./routes/api/auth/magic.ts";
+import * as $api_auth_password from "./routes/api/auth/password.ts";
+import * as $api_auth_reset from "./routes/api/auth/reset.ts";
 import * as $api_auth_session from "./routes/api/auth/session.ts";
 import * as $api_auth_signup from "./routes/api/auth/signup.ts";
 import * as $api_gameplay_move from "./routes/api/gameplay/move.ts";
@@ -37,6 +39,7 @@ import * as $leaderboard from "./routes/leaderboard.tsx";
 import * as $local from "./routes/local.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $queue from "./routes/queue.tsx";
+import * as $reset_password from "./routes/reset-password.tsx";
 import * as $signup from "./routes/signup.tsx";
 import * as $AiGame from "./islands/AiGame.tsx";
 import * as $AuthForm from "./islands/AuthForm.tsx";
@@ -50,6 +53,7 @@ import * as $LobbyViewer from "./islands/LobbyViewer.tsx";
 import * as $LogoutButton from "./islands/LogoutButton.tsx";
 import * as $OnlineGame from "./islands/OnlineGame.tsx";
 import * as $QueueWait from "./islands/QueueWait.tsx";
+import * as $ResetPasswordForm from "./islands/ResetPasswordForm.tsx";
 import * as $Sidebar from "./islands/Sidebar.tsx";
 import * as $TimeControlPicker from "./islands/TimeControlPicker.tsx";
 import type { Manifest } from "$fresh/server.ts";
@@ -65,6 +69,8 @@ const manifest = {
     "./routes/api/auth/login.ts": $api_auth_login,
     "./routes/api/auth/logout.ts": $api_auth_logout,
     "./routes/api/auth/magic.ts": $api_auth_magic,
+    "./routes/api/auth/password.ts": $api_auth_password,
+    "./routes/api/auth/reset.ts": $api_auth_reset,
     "./routes/api/auth/session.ts": $api_auth_session,
     "./routes/api/auth/signup.ts": $api_auth_signup,
     "./routes/api/gameplay/move.ts": $api_gameplay_move,
@@ -91,6 +97,7 @@ const manifest = {
     "./routes/local.tsx": $local,
     "./routes/login.tsx": $login,
     "./routes/queue.tsx": $queue,
+    "./routes/reset-password.tsx": $reset_password,
     "./routes/signup.tsx": $signup,
   },
   islands: {
@@ -106,6 +113,7 @@ const manifest = {
     "./islands/LogoutButton.tsx": $LogoutButton,
     "./islands/OnlineGame.tsx": $OnlineGame,
     "./islands/QueueWait.tsx": $QueueWait,
+    "./islands/ResetPasswordForm.tsx": $ResetPasswordForm,
     "./islands/Sidebar.tsx": $Sidebar,
     "./islands/TimeControlPicker.tsx": $TimeControlPicker,
   },

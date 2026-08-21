@@ -46,6 +46,7 @@ export const handler: Handlers = {
     let accessToken: string | null = null;
     let refreshToken: string | null = null;
     let expiresIn = 3600;
+    const isRecovery = type === "recovery";
 
     if (code) {
       const { data, error } = await supabaseAnon().auth.exchangeCodeForSession(
@@ -81,7 +82,7 @@ export const handler: Handlers = {
     }
 
     const headers = new Headers({
-      Location: next,
+      Location: isRecovery ? "/reset-password" : next,
     });
 
     setAuthCookies(headers, accessToken, refreshToken, expiresIn);
