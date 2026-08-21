@@ -26,7 +26,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
     if (sessionResponse.ok && sessionData?.isAuthenticated) {
       // Force a server-rendered refresh so middleware-backed auth state appears immediately.
-      window.location.assign("/");
+      globalThis.location.assign("/");
       return;
     }
 

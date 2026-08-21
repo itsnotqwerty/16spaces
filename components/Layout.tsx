@@ -40,6 +40,15 @@ export default function Layout(
         >
           View the Code
         </a>
+        <p class="mt-4 flex items-center justify-center gap-3">
+          <span>Cool Freakin' Games is funded entirely by donations</span>
+          <a
+            href="bitcoin:bc1qsxmj8euqjqqze36kweglg4kut30f95gygmhyz3"
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold text-white bg-[#f7931a] hover:bg-[#e0830f] shadow-md text-sm"
+          >
+            <span class="font-bold">₿</span> Donate Bitcoin
+          </a>
+        </p>
       </footer>
     </div>
   );
