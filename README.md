@@ -71,6 +71,9 @@ Copy `.env.example` to `.env` (already gitignored). High-level variables:
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY` — public client config
 - `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` — server secrets (Deno Deploy only)
 - `SITE_URL` — `http://localhost:8000` locally, `https://16space.deno.dev` in production
+- `RESEND_API_KEY` — [Resend](https://resend.com) API key used to send auth emails (magic link, password reset)
+- `MAIL_FROM` — verified sender address, e.g. `16spaces <no-reply@16space.deno.dev>`
+- `MAIL_ORIGIN_URL` — origin embedded in email action links (same as `SITE_URL` in most setups)
 - `FEATURE_AUTH`, `FEATURE_ONLINE`, `FEATURE_MATCHMAKING`, `FEATURE_RATED` — all default **off** unless set to the string `true`
 	- Accepted truthy values: `true`, `"true"`, `1`, `yes` (case-insensitive)
 

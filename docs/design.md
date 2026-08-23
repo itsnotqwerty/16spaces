@@ -500,11 +500,13 @@ Rules modal stays on the board (copy from spec). Move it out of a `<ul>` that cu
 | Method | v1 | Notes |
 | --- | --- | --- |
 | Email + password | yes | Confirm-email **off** for low friction. Password min 8. |
-| Magic link | yes | `signInWithOtp({ email, options: { emailRedirectTo: SITE_URL + "/api/auth/callback" } })` |
+| Magic link | yes | Sent via **Resend**: server generates the link with `supabaseAdmin().auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo: MAIL_ORIGIN_URL + "/api/auth/callback" } })` and emails it through the Resend API. Supabase email sending is **disabled** in the dashboard. |
 | GitHub OAuth | yes | |
 | Google OAuth | yes | |
 | Anonymous | yes | `signInAnonymously()`. Trigger inserts placeholder `user_`+8; API then updates to `Guest` + 4 Crockford and `is_guest=true`. |
 | Phone | no | |
+
+**Email delivery (Resend):** `lib/mail.ts` is the only sender. It reads `MAIL_ORIGIN_URL` for the action-link origin (falls back to `http://localhost:8000`), builds `/api/auth/callback` URLs with a safe `next` param, generates the Supabase action link with the service-role client, and POSTs to `https://api.resend.com/emails` with `RESEND_API_KEY` (Bearer) and `MAIL_FROM` (verified sender). Used by `/api/auth/magic` and `/api/auth/reset`; the existing callback verification (`token_hash`/`code`) is unchanged.
 
 **Cookies** (`$std/http/cookie.ts`, already on std 0.216.0) via `lib/auth_cookies.ts`:
 
@@ -1323,6 +1325,9 @@ SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_JWT_SECRET=
 SITE_URL=https://16space.deno.dev
+RESEND_API_KEY=<server only>
+MAIL_FROM=16spaces <no-reply@16space.deno.dev>
+MAIL_ORIGIN_URL=https://16space.deno.dev
 FEATURE_AUTH=false
 FEATURE_ONLINE=false
 FEATURE_MATCHMAKING=false

@@ -1,6 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { flag } from "../../../lib/flags.ts";
-import { supabaseAnon } from "../../../lib/supabase.ts";
+import { buildCallbackUrl, sendPasswordResetEmail } from "../../../lib/mail.ts";
 
 export const handler: Handlers = {
   async POST(req) {
@@ -19,17 +19,17 @@ export const handler: Handlers = {
       );
     }
 
-    const siteUrl = Deno.env.get("SITE_URL") ?? "http://localhost:8000";
-    const callbackUrl = new URL("/api/auth/callback", siteUrl);
-    callbackUrl.searchParams.set("next", "/reset-password");
-
-    const { error } = await supabaseAnon().auth.resetPasswordForEmail(email, {
-      redirectTo: callbackUrl.toString(),
-    });
-
-    if (error) {
+    try {
+      await sendPasswordResetEmail(
+        email,
+        buildCallbackUrl("/reset-password"),
+      );
+    } catch (error) {
       return Response.json(
-        { error: error.message, code: "reset_failed" },
+        {
+          error: error instanceof Error ? error.message : "reset_failed",
+          code: "reset_failed",
+        },
         { status: 400 },
       );
     }

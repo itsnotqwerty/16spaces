@@ -144,6 +144,8 @@ Each PR is independently reviewable and mergeable. Flags default so production s
 - **Files:** `lib/auth_cookies.ts`, `lib/auth.ts` (`verifyAccessJwt`), `routes/_middleware.ts`, `routes/login.tsx`, `routes/signup.tsx`, `islands/AuthForm.tsx`, `routes/api/auth/signup.ts`, `routes/api/auth/login.ts`, `routes/api/auth/magic.ts`, `routes/api/auth/guest.ts`, `routes/api/auth/callback.ts`, `routes/api/auth/logout.ts`, `routes/api/auth/session.ts`
 - **Description:** Cookie adapter (K15), **jose + `SUPABASE_JWT_SECRET` verify** (K21), `Secure` iff https, refresh path, `X-Request-Id`. Guest updates placeholder → `GuestXXXX` via admin (`is_guest` not client-writable). Callback without `sb-pkce` → 400 same-browser message. No OAuth yet. `FEATURE_AUTH=true` in prod after verify.
 
+  **Update:** Auth emails (magic link, password reset) are sent via **Resend** (`lib/mail.ts`): the server generates Supabase action links with `auth.admin.generateLink` and mails them through the Resend API. Email origin comes from `MAIL_ORIGIN_URL`; requires `RESEND_API_KEY` and `MAIL_FROM`. Supabase Auth email sending should be disabled in the dashboard.
+
 ### PR 5 — Profiles and username
 
 - **Title:** Profiles, unique usernames, `/settings`

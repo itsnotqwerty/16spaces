@@ -1,6 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { flag } from "../../../lib/flags.ts";
-import { supabaseAnon } from "../../../lib/supabase.ts";
+import { buildCallbackUrl, sendMagicLinkEmail } from "../../../lib/mail.ts";
 
 export const handler: Handlers = {
   async POST(req) {
@@ -19,22 +19,14 @@ export const handler: Handlers = {
       );
     }
 
-    const siteUrl = Deno.env.get("SITE_URL") ?? "http://localhost:8000";
-    const callbackUrl = new URL("/api/auth/callback", siteUrl);
-    if (typeof next === "string" && next.startsWith("/") && !next.startsWith("//")) {
-      callbackUrl.searchParams.set("next", next);
-    }
-
-    const { error } = await supabaseAnon().auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: callbackUrl.toString(),
-      },
-    });
-
-    if (error) {
+    try {
+      await sendMagicLinkEmail(email, buildCallbackUrl(next));
+    } catch (error) {
       return Response.json(
-        { error: error.message, code: "magic_failed" },
+        {
+          error: error instanceof Error ? error.message : "magic_failed",
+          code: "magic_failed",
+        },
         { status: 400 },
       );
     }
