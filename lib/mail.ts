@@ -80,6 +80,6 @@ export async function sendPasswordResetEmail(email: string, redirectTo: string) 
   await sendEmail(
     email,
     "Reset your 16spaces password",
-    `<p>Click to reset your password: <a href="${link}">${link}</a></p>`,
+    `<p>A password reset has been requested for your account. To reset your password, please click <a href="${link}">this link</a>.</p>`,
   );
 }
