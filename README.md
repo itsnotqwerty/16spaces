@@ -99,12 +99,17 @@ Current transitional routes:
 - `/login` and `/signup` auth scaffold pages
 - `/queue` and `/l/new` queue/lobby scaffold pages
 
-Deployment scaffolding lives in [deploy/](deploy/): nginx example config, systemd unit example, and an install script.
-The nginx template now serves HTTPS on `443` and redirects `80` to `https://`.
-Example:
+Deployment tooling is provided by the
+[DONUT Deploy](https://github.com/itsnotqwerty/donut-deploy) submodule. Initialize
+it after cloning, then run the installer with this application's settings:
 
 ```bash
-sudo ./deploy/install.sh -n 16space.example.com -p 8000 -e .env
+git submodule update --init deploy
+sudo ./deploy/install.sh \
+	--name 16spaces \
+	--domain 16spaces.coolfreakingames.dev \
+	--command "/usr/local/bin/deno run -A main.ts" \
+	--env .env
 ```
 
 Default cert paths are Let’s Encrypt style:
@@ -113,8 +118,7 @@ Default cert paths are Let’s Encrypt style:
 - `/etc/letsencrypt/live/<domain>/privkey.pem`
 
 Override them with `--cert` and `--key` if you use a different certificate layout.
-
-The installer will try to install nginx if it is missing, and it will bump the app port upward if the requested port is already in use.
+Use `--http-only` while bootstrapping a host before its certificates exist.
 
 ## License
 
