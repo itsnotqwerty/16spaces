@@ -1,6 +1,6 @@
 # 16spaces
 
-16spaces is a 4×4 two-player abstract game — a Tic-Tac-Toe variant with a five-stone cap and sliding. Play it live at [https://16space.deno.dev](https://16space.deno.dev).
+16spaces is a 4×4 two-player abstract game — a Tic-Tac-Toe variant with a five-stone cap and sliding. Play it live at [https://16spaces.coolfreakingames.dev/](https://16spaces.coolfreakingames.dev/).
 
 **Status (2026-08-16):** local hot-seat is live at `/local`, with a menu-first home page at `/`. Multiplayer (auth, lobbies, ELO matchmaking) is planned; see [docs/](docs/README.md).
 
