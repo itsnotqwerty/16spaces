@@ -1,8 +1,14 @@
 import { Handlers } from "$fresh/server.ts";
-import { clearAuthCookies } from "../../../lib/auth_cookies.ts";
+import {
+  clearAuthCookies,
+  getAccessTokenFromRequest,
+} from "../../../lib/auth_cookies.ts";
+import { revokeSession } from "../../../lib/auth.ts";
 
 export const handler: Handlers = {
-  POST() {
+  async POST(req) {
+    const token = getAccessTokenFromRequest(req);
+    if (token) await revokeSession(token);
     const headers = new Headers();
     clearAuthCookies(headers);
 

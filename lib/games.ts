@@ -14,7 +14,8 @@ import {
   registerMatchCreatedHook,
   settleMatchResult,
 } from "./matchmaking.ts";
-import { supabaseAdmin } from "./supabase.ts";
+import { database, persist } from "./db.ts";
+import type postgres from "postgres";
 
 export type GameMoveRecord = {
   ply: number;
@@ -84,48 +85,28 @@ function initialSnapshot(
 }
 
 function persistSession(session: GameSession) {
-  try {
-    supabaseAdmin()
-      .from("games")
-      .upsert({
-        id: session.gameId,
-        match_id: session.matchId,
-        player_x_id: session.playerXId,
-        player_o_id: session.playerOId,
-        rated: session.rated,
-        time_control_id: session.timeControlId,
-        snapshot: session.snapshot,
-        status: session.completedAt ? "completed" : "active",
-        result: session.result,
-        updated_at: new Date(session.updatedAt).toISOString(),
-        completed_at: session.completedAt
-          ? new Date(session.completedAt).toISOString()
-          : null,
-      }, { onConflict: "id" })
-      .then(({ error }) => {
-        if (error) console.error("game_persist_failed", error);
-      });
-  } catch (err) {
-    console.error("game_persist_failed", err);
-  }
+  const row = structuredClone(session);
+  persist(async () => {
+    await database()`INSERT INTO games
+      (id, match_id, player_x_id, player_o_id, rated, time_control_id, snapshot, status, result, updated_at, completed_at)
+      VALUES (${row.gameId}, ${row.matchId}, ${row.playerXId}, ${row.playerOId}, ${row.rated},
+        ${row.timeControlId}, ${
+      database().json(row.snapshot as unknown as postgres.JSONValue)
+    }, ${row.completedAt ? "completed" : "active"},
+        ${row.result}, ${new Date(row.updatedAt)}, ${
+      row.completedAt ? new Date(row.completedAt) : null
+    })
+      ON CONFLICT (id) DO UPDATE SET snapshot = EXCLUDED.snapshot, status = EXCLUDED.status,
+        result = EXCLUDED.result, updated_at = EXCLUDED.updated_at, completed_at = EXCLUDED.completed_at`;
+  });
 }
 
 function persistMove(session: GameSession, move: GameMoveRecord) {
-  try {
-    supabaseAdmin()
-      .from("game_moves")
-      .upsert({
-        game_id: session.gameId,
-        ply: move.ply,
-        player: move.player,
-        notation: move.notation,
-      }, { onConflict: "game_id,ply" })
-      .then(({ error }) => {
-        if (error) console.error("game_move_persist_failed", error);
-      });
-  } catch (err) {
-    console.error("game_move_persist_failed", err);
-  }
+  persist(async () => {
+    await database()`INSERT INTO game_moves (game_id, ply, player, notation)
+      VALUES (${session.gameId}, ${move.ply}, ${move.player}, ${move.notation})
+      ON CONFLICT (game_id, ply) DO UPDATE SET player = EXCLUDED.player, notation = EXCLUDED.notation`;
+  });
 }
 
 function resultFromTerminal(session: GameSession): MatchResult | null {

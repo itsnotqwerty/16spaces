@@ -1,6 +1,6 @@
 import { deleteCookie, getCookies, setCookie } from "$std/http/cookie.ts";
 
-export const ACCESS_COOKIE_NAME = "sb-access-token";
+export const ACCESS_COOKIE_NAME = "spaces-session";
 export const REFRESH_COOKIE_NAME = "sb-refresh-token";
 
 function isSecureCookie(): boolean {
@@ -16,7 +16,7 @@ export function getAccessTokenFromRequest(req: Request): string | null {
 export function setAuthCookies(
   headers: Headers,
   accessToken: string,
-  refreshToken: string,
+  _refreshToken: string,
   expiresInSeconds: number,
 ): void {
   const secure = isSecureCookie();
@@ -31,15 +31,8 @@ export function setAuthCookies(
     maxAge: Math.max(60, expiresInSeconds),
   });
 
-  setCookie(headers, {
-    name: REFRESH_COOKIE_NAME,
-    value: refreshToken,
-    httpOnly: true,
-    sameSite: "Lax",
-    path: "/",
-    secure,
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  deleteCookie(headers, "sb-access-token", { path: "/" });
+  deleteCookie(headers, REFRESH_COOKIE_NAME, { path: "/" });
 }
 
 export function clearAuthCookies(headers: Headers): void {

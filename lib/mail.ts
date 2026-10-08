@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "./supabase.ts";
+import { createEmailToken } from "./auth.ts";
 
 function getEnv(name: string): string {
   const value = Deno.env.get(name);
@@ -45,21 +45,9 @@ async function generateActionLink(
   type: "magiclink" | "recovery",
   email: string,
   redirectTo: string,
-): Promise<string> {
-  const { data, error } = await supabaseAdmin().auth.admin.generateLink({
-    type,
-    email,
-    options: { redirectTo },
-  });
-
-  const hashedToken = data.properties?.hashed_token;
-  if (error || !hashedToken) {
-    throw new Error(error?.message ?? "Failed to generate link.");
-  }
-
-  // Point straight at our callback with server-side query params. This skips
-  // Supabase's /auth/v1/verify redirect, which can fall back to the deprecated
-  // implicit `/#access_token=` fragment depending on the project flow type.
+): Promise<string | null> {
+  const hashedToken = await createEmailToken(email, type);
+  if (!hashedToken) return null;
   const link = new URL(redirectTo);
   link.searchParams.set("token_hash", hashedToken);
   link.searchParams.set("type", type);
@@ -68,6 +56,7 @@ async function generateActionLink(
 
 export async function sendMagicLinkEmail(email: string, redirectTo: string) {
   const link = await generateActionLink("magiclink", email, redirectTo);
+  if (!link) return;
   await sendEmail(
     email,
     "Your 16spaces magic link",
@@ -75,8 +64,12 @@ export async function sendMagicLinkEmail(email: string, redirectTo: string) {
   );
 }
 
-export async function sendPasswordResetEmail(email: string, redirectTo: string) {
+export async function sendPasswordResetEmail(
+  email: string,
+  redirectTo: string,
+) {
   const link = await generateActionLink("recovery", email, redirectTo);
+  if (!link) return;
   await sendEmail(
     email,
     "Reset your 16spaces password",

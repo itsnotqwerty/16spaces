@@ -14,7 +14,8 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "lib/": "./lib/",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.49.1",
+    "postgres": "npm:postgres@3.4.7",
+    "bcryptjs": "npm:bcryptjs@3.0.2",
     "jose": "https://esm.sh/jose@5.9.6",
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
     "preact": "https://esm.sh/preact@10.22.0",

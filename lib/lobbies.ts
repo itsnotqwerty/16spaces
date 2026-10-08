@@ -1,7 +1,7 @@
 import { TIME_CONTROLS } from "./game/index.ts";
 import { createGameSession, getGameById } from "./games.ts";
 import { isPlaceholderUsername } from "./username.ts";
-import { supabaseAdmin } from "./supabase.ts";
+import { database, persist } from "./db.ts";
 
 export type LobbyPrivacy = "public" | "private";
 export type LobbyStatus = "open" | "started" | "cancelled" | "expired";
@@ -93,47 +93,25 @@ function now(): number {
 }
 
 function persistLobby(lobby: Lobby) {
-  try {
-    supabaseAdmin()
-      .from("lobbies")
-      .upsert({
-        id: lobby.lobbyId,
-        code: lobby.code,
-        host_user_id: lobby.hostUserId,
-        privacy: lobby.privacy,
-        status: lobby.status,
-        rated: lobby.options.rated,
-        time_control_id: lobby.options.timeControlId,
-        color_assignment: lobby.options.colorAssignment,
-        game_id: lobby.gameId,
-        updated_at: new Date(lobby.updatedAt).toISOString(),
-      }, { onConflict: "id" })
-      .then(({ error }) => {
-        if (error) console.error("lobby_persist_failed", error);
-      });
-  } catch (err) {
-    console.error("lobby_persist_failed", err);
-  }
-
-  try {
-    supabaseAdmin()
-      .from("lobby_members")
-      .upsert(
-        lobby.members.map((m) => ({
-          lobby_id: lobby.lobbyId,
-          user_id: m.userId,
-          is_host: m.isHost,
-          ready: m.ready,
-          last_seen_at: new Date(m.lastSeenAt).toISOString(),
-        })),
-        { onConflict: "lobby_id,user_id" },
-      )
-      .then(({ error }) => {
-        if (error) console.error("lobby_members_persist_failed", error);
-      });
-  } catch (err) {
-    console.error("lobby_members_persist_failed", err);
-  }
+  const row = structuredClone(lobby);
+  persist(() =>
+    database().begin(async (sql) => {
+      await sql`INSERT INTO lobbies
+      (id, code, host_user_id, privacy, status, rated, time_control_id, color_assignment, game_id, updated_at)
+      VALUES (${row.lobbyId}, ${row.code}, ${row.hostUserId}, ${row.privacy}, ${row.status},
+        ${row.options.rated}, ${row.options.timeControlId}, ${row.options.colorAssignment},
+        ${row.gameId}, ${new Date(row.updatedAt)})
+      ON CONFLICT (id) DO UPDATE SET privacy = EXCLUDED.privacy, status = EXCLUDED.status,
+        rated = EXCLUDED.rated, time_control_id = EXCLUDED.time_control_id,
+        color_assignment = EXCLUDED.color_assignment, game_id = EXCLUDED.game_id, updated_at = EXCLUDED.updated_at`;
+      await sql`DELETE FROM lobby_members WHERE lobby_id = ${row.lobbyId}`;
+      for (const member of row.members) {
+        await sql`INSERT INTO lobby_members (lobby_id, user_id, is_host, ready, last_seen_at, joined_at)
+        VALUES (${row.lobbyId}, ${member.userId}, ${member.isHost}, ${member.ready},
+          ${new Date(member.lastSeenAt)}, ${new Date(member.joinedAt)})`;
+      }
+    })
+  );
 }
 
 function touch(lobby: Lobby) {

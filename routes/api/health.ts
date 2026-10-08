@@ -1,6 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { allFlags } from "../../lib/flags.ts";
-import { supabaseAdmin } from "../../lib/supabase.ts";
+import { database } from "../../lib/db.ts";
 import type { AppState } from "../_middleware.ts";
 
 export const handler: Handlers<unknown, AppState> = {
@@ -9,11 +9,9 @@ export const handler: Handlers<unknown, AppState> = {
     let dbError: string | null = null;
 
     try {
-      const { data, error } = await supabaseAdmin().rpc("healthcheck");
-      db = !error && data === true;
-      if (error) {
-        dbError = error.message;
-      }
+      const [row] =
+        await database()`SELECT true AS healthy FROM app_users LIMIT 1`;
+      db = row?.healthy === true || row === undefined;
     } catch (error) {
       dbError = error instanceof Error ? error.message : "unknown_error";
     }

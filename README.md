@@ -45,7 +45,7 @@ Other tasks from `deno.json`:
 
 Engine tests are available via `deno task test` for the shared rules module (`lib/game`).
 
-Basic health check is available at `/api/health` and returns app readiness, `FEATURE_*` flag values, plus a Supabase `healthcheck` RPC probe when env/secrets are configured.
+Basic health check is available at `/api/health` and returns `FEATURE_*` flags plus a PostgreSQL connection/schema probe (`db`).
 
 Session scaffold endpoint is available at `/api/auth/session` and currently returns a no-store placeholder envelope for upcoming auth integration.
 
@@ -56,20 +56,22 @@ Auth scaffold routes are available:
 
 Create auth endpoints are gated by `FEATURE_AUTH`; existing cookie sessions can still be read via middleware + `/api/auth/session`.
 Magic-link callback now exchanges auth params and sets httpOnly session cookies before redirecting back into the app.
-Signup now accepts a `username` field (validated against spec format/reserved names) and stores it in Supabase auth user metadata.
+Signup accepts a `username` field and creates a local account and profile atomically.
+Passwords use bcrypt; sessions and one-use email tokens are hashed in PostgreSQL.
 
 ## Stack and deploy
 
 - **Runtime:** Deno (CI uses Deno 2.x)
 - **Framework:** [Fresh 1.7.3](https://fresh.deno.dev) + Preact 10.22 + Tailwind 3.4.1
-- **Live:** Deno Deploy project `16spaces` (`.github/workflows/deploy.yml` → `main.ts` on push to `main` and on PRs)
-- **Planned DB / auth / realtime:** Postgres + Auth + Realtime through [Supabase](https://supabase.com). No long-lived game server, Redis, or worker.
+- **Hosting:** a single long-running Deno process behind nginx/systemd on the PostgreSQL host.
+- **DB / auth:** local PostgreSQL 16+, Postgres.js, bcrypt, and app-owned sessions.
 
-Supabase wiring is now scaffolded (`lib/supabase.ts` and `supabase/migrations/0001_init.sql`).
+Apply [db/schema.sql](db/schema.sql) before starting the app. Follow
+[docs/postgres.md](docs/postgres.md) for provisioning and importing existing accounts/data.
 Copy `.env.example` to `.env` (already gitignored). High-level variables:
 
-- `SUPABASE_URL`, `SUPABASE_ANON_KEY` — public client config
-- `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` — server secrets (Deno Deploy only)
+- `DATABASE_URL` — server-only PostgreSQL connection string
+- `DENO_ENV=production` — production runtime
 - `SITE_URL` — `http://localhost:8000` locally, `https://16space.deno.dev` in production
 - `RESEND_API_KEY` — [Resend](https://resend.com) API key used to send auth emails (magic link, password reset)
 - `MAIL_FROM` — verified sender address, e.g. `16spaces <no-reply@16space.deno.dev>`
@@ -77,9 +79,11 @@ Copy `.env.example` to `.env` (already gitignored). High-level variables:
 - `FEATURE_AUTH`, `FEATURE_ONLINE`, `FEATURE_MATCHMAKING`, `FEATURE_RATED` — all default **off** unless set to the string `true`
 	- Accepted truthy values: `true`, `"true"`, `1`, `yes` (case-insensitive)
 
-Important: `.env` only affects local runs. On Deno Deploy, set these variables in the project Environment Variables UI.
-
-Production: push to `main` → deploy workflow → https://16space.deno.dev.
+The systemd installer loads the selected environment file. Disable the legacy
+Deno Deploy workflow when cutting over: a remote cloud process cannot reach
+PostgreSQL bound to this server's localhost. Active game, lobby, matchmaking,
+and rating state still lives in process memory; this migration replaces the
+existing persistence writes, not restart recovery or multi-process support.
 
 Architecture and APIs: [docs/design.md](docs/design.md). Incremental PR plan: [docs/roadmap.md](docs/roadmap.md).
 

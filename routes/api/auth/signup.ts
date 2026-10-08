@@ -1,7 +1,12 @@
 import { Handlers } from "$fresh/server.ts";
 import { setAuthCookies } from "../../../lib/auth_cookies.ts";
 import { flag } from "../../../lib/flags.ts";
-import { supabaseAdmin, supabaseAnon } from "../../../lib/supabase.ts";
+import {
+  createAccount,
+  createSession,
+  SESSION_SECONDS,
+  type SessionUser,
+} from "../../../lib/auth.ts";
 import { normalizeUsername, validateUsername } from "../../../lib/username.ts";
 
 export const handler: Handlers = {
@@ -14,7 +19,10 @@ export const handler: Handlers = {
     }
 
     const { email, password, username } = await req.json();
-    if (!email || !password || !username || String(password).length < 8) {
+    if (
+      typeof email !== "string" || typeof password !== "string" ||
+      typeof username !== "string" || !email || !username || password.length < 8
+    ) {
       return Response.json(
         { error: "invalid_request", code: "invalid_signup_payload" },
         { status: 400 },
@@ -31,61 +39,32 @@ export const handler: Handlers = {
 
     const normalizedUsername = normalizeUsername(String(username));
 
-    const { data, error } = await supabaseAnon().auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: normalizedUsername,
-        },
-      },
-    });
-
-    if (error || !data.user) {
+    let user: SessionUser;
+    try {
+      user = await createAccount(email, password, normalizedUsername);
+    } catch {
       return Response.json(
         {
-          error: error?.message ?? "signup_failed",
+          error:
+            "Unable to create account. Check your details or try signing in.",
           code: "signup_failed",
         },
         { status: 400 },
       );
     }
 
-    // Record the username on the profiles table so login-by-username can
-    // resolve it. (The on_auth_user_created trigger is a later migration.)
-    const { error: profileError } = await supabaseAdmin()
-      .from("profiles")
-      .upsert(
-        { id: data.user.id, username: normalizedUsername },
-        { onConflict: "id" },
-      );
-
-    if (profileError) {
-      return Response.json(
-        { error: "That username is taken.", code: "username_taken" },
-        { status: 409 },
-      );
-    }
-
     const headers = new Headers();
-    if (data.session) {
-      setAuthCookies(
-        headers,
-        data.session.access_token,
-        data.session.refresh_token,
-        data.session.expires_in,
-      );
-    }
+    setAuthCookies(headers, await createSession(user.id), "", SESSION_SECONDS);
 
     return Response.json(
       {
         ok: true,
         user: {
-          id: data.user.id,
-          email: data.user.email ?? null,
+          id: user.id,
+          email: user.email,
           username: normalizedUsername,
         },
-        sessionStarted: Boolean(data.session),
+        sessionStarted: true,
       },
       { headers },
     );
