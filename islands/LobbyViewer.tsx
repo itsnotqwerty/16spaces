@@ -30,7 +30,7 @@ export default function LobbyViewer() {
                 }
                 
                 const data = await response.json();
-                setLobbies(data);
+                setLobbies(data.lobbies);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An unknown error occurred');
             } finally {
